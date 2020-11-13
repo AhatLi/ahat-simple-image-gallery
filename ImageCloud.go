@@ -3,14 +3,12 @@ package main
 //필요 패키지 임포트
 import (
 	"fmt"
-	"image/jpeg"
-	"image/png"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/nfnt/resize"
+	"github.com/disintegration/imaging"
 )
 
 func indexTandler(w http.ResponseWriter, r *http.Request) {
@@ -42,56 +40,23 @@ func fileExists(filename string) bool {
 
 func makeThumbnail(filename string) {
 	thumbname := "./thumbnail/" + filename
-	ext := thumbname[len(thumbname)-4:]
-	fmt.Println(ext)
-	if fileExists(thumbname) {
-		return
+
+	// load original image
+	img, err := imaging.Open(filename)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	file, err1 := os.Open(filename)
-	if err1 != nil {
-		log.Fatal(err1)
+	thumbnail := imaging.CropCenter(imaging.Resize(img, 80, 0, imaging.Lanczos), 80, 80)
+
+	err = imaging.Save(thumbnail, thumbname)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-
-	switch ext {
-	case ".jpg", "jpeg":
-		{
-			fmt.Println("jpg")
-
-			img, err2 := jpeg.Decode(file)
-			if err2 != nil {
-				log.Fatal(err2)
-			}
-			file.Close()
-
-			m := resize.Resize(80, 0, img, resize.Lanczos3)
-			out, err3 := os.Create(thumbname)
-			if err3 != nil {
-				log.Fatal(err3)
-			}
-			defer out.Close()
-			jpeg.Encode(out, m, nil)
-		}
-	case ".png":
-		{
-			fmt.Println("png")
-
-			img, err2 := png.Decode(file)
-			if err2 != nil {
-				log.Fatal(err2)
-			}
-			file.Close()
-
-			m := resize.Resize(80, 0, img, resize.Lanczos3)
-			out, err3 := os.Create(thumbname)
-			if err3 != nil {
-				log.Fatal(err3)
-			}
-			defer out.Close()
-			png.Encode(out, m)
-		}
-	}
-
 }
 
 func initServer() {
