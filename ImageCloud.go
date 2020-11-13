@@ -4,6 +4,8 @@ package main
 import (
 	"fmt"
 	"image/jpeg"
+	"image/png"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -30,43 +32,88 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
 }
 
-func indexThumbnail(w http.ResponseWriter, r *http.Request) {
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
 
-	// open "test.jpg"
-	file, err := os.Open("assets/gopher.jpg")
-	if err != nil {
-		log.Fatal(err)
+func makeThumbnail(filename string) {
+	thumbname := "./thumbnail/" + filename
+	ext := thumbname[len(thumbname)-4:]
+	fmt.Println(ext)
+	if fileExists(thumbname) {
+		return
 	}
 
-	// decode jpeg into image.Image
-	img, err := jpeg.Decode(file)
-	if err != nil {
-		log.Fatal(err)
+	file, err1 := os.Open(filename)
+	if err1 != nil {
+		log.Fatal(err1)
 	}
-	file.Close()
 
-	// resize to width 1000 using Lanczos resampling
-	// and preserve aspect ratio
-	m := resize.Resize(80, 0, img, resize.Lanczos3)
+	switch ext {
+	case ".jpg", "jpeg":
+		{
+			fmt.Println("jpg")
 
-	out, err := os.Create("test_resized.jpg")
-	if err != nil {
-		log.Fatal(err)
+			img, err2 := jpeg.Decode(file)
+			if err2 != nil {
+				log.Fatal(err2)
+			}
+			file.Close()
+
+			m := resize.Resize(80, 0, img, resize.Lanczos3)
+			out, err3 := os.Create(thumbname)
+			if err3 != nil {
+				log.Fatal(err3)
+			}
+			defer out.Close()
+			jpeg.Encode(out, m, nil)
+		}
+	case ".png":
+		{
+			fmt.Println("png")
+
+			img, err2 := png.Decode(file)
+			if err2 != nil {
+				log.Fatal(err2)
+			}
+			file.Close()
+
+			m := resize.Resize(80, 0, img, resize.Lanczos3)
+			out, err3 := os.Create(thumbname)
+			if err3 != nil {
+				log.Fatal(err3)
+			}
+			defer out.Close()
+			png.Encode(out, m)
+		}
 	}
-	defer out.Close()
-
-	// write new image to file
-	jpeg.Encode(out, m, nil)
 
 }
 
+func initServer() {
+	path := "./images"
+	files, errf := ioutil.ReadDir(path)
+	if errf != nil {
+		log.Fatal(errf)
+	}
+
+	for _, f := range files {
+		makeThumbnail(path + "/" + f.Name())
+	}
+}
+
 func main() {
+	initServer()
+
 	//기본 Url 핸들러 메소드 지정
 	http.HandleFunc("/", indexTandler)
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
-	http.HandleFunc("/thumbnail", indexThumbnail)
 	//서버 시작
-	err := http.ListenAndServe(":9090", nil)
+	err := http.ListenAndServe(":9091", nil)
 	//예외 처리
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
