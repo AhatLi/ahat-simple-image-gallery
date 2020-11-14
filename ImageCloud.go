@@ -2,6 +2,8 @@ package main
 
 //필요 패키지 임포트
 import (
+	"bufio"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,23 +17,45 @@ const imgPath string = "images/"
 const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
+func imgToBase64(file string) string {
+	f, _ := os.Open(file)
+	reader := bufio.NewReader(f)
+	content, _ := ioutil.ReadAll(reader)
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	return "data:image/png;base64," + encoded
+}
+
 func indexTandler(w http.ResponseWriter, r *http.Request) {
-	// MAIN SECTION HTML CODE
+	fmt.Println(r.URL)
+
+	if r.URL.String() != "/" && !fileExists(r.URL.String()) {
+		return
+	}
+
+	fmt.Fprintf(w, "<html><head><style>.modal {  display: none;  position: fixed;   z-index: 1;  padding-top: 100px;  left: 0;  top: 0;  width: 100%%;  height: 100%%;  overflow: auto;  background-color: rgb(0,0,0);  background-color: rgba(0,0,0,0.4);}.modal-content {  background-color: #fefefe;  margin: auto;  padding: 20px;  border: 1px solid #888;  width: 80%%;}</style></head><body><div id='myModal' class='modal'>  <div class='modal-content'>    <span class='close'>&times;</span>    <p><img src='https://blog.jinbo.net/attach/615/200937431.jpg' style='width: 100%%;padding-bottom: 25%%' id='myImg'></p>  </div></div>")
 	fmt.Fprintf(w, "<h1>Whoa, Go is neat!</h1>")
 	fmt.Fprintf(w, "<title>Go</title>")
 
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
+	path := thumPath + imgPath + r.URL.String()
+	files, errf := ioutil.ReadDir(path)
+	if errf != nil {
+		log.Fatal(errf)
+	}
 
-	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
-	fmt.Fprintf(w, "<img src='assets/001.jpg' style='width:20%%;'>")
+	for i, f := range files {
+		if i%5 == 0 {
+			fmt.Fprintf(w, "<br>")
+		}
+
+		if f.IsDir() {
+			//	explorerDirectory(path + f.Name())'"+imgPath+r.URL.String()+f.Name()+"'
+		} else {
+			fmt.Fprintf(w, "<img src='"+imgToBase64(path+f.Name())+"' style='width:20%%;' onClick='thumbClick(\""+imgPath+r.URL.String()+f.Name()+"\")' name='myBtn'>")
+		}
+	}
+	fmt.Fprintf(w, "<script src='/assets/script.js'></script>")
+	fmt.Fprintf(w, "</body></html>")
 }
 
 func fileExists(filename string) bool {
@@ -95,7 +119,7 @@ func main() {
 	http.Handle("/thumbnail/", http.StripPrefix("/thumbnail/", http.FileServer(http.Dir(thumPath))))
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetPath))))
 	//서버 시작
-	err := http.ListenAndServe(":9091", nil)
+	err := http.ListenAndServe(":9090", nil)
 	//예외 처리
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
