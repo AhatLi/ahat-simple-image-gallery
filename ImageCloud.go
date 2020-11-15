@@ -1,6 +1,5 @@
 package main
 
-//필요 패키지 임포트
 import (
 	"bufio"
 	"encoding/base64"
@@ -32,13 +31,23 @@ func imgToBase64(file string) string {
 //FileSort  aaa
 type FileSort []os.FileInfo
 
-func (a FileSort) Len() int           { return len(a) }
-func (a FileSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a FileSort) Less(i, j int) bool { return a[i].IsDir() || a[i].Name() < a[j].Name() }
+func (a FileSort) Len() int      { return len(a) }
+func (a FileSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a FileSort) Less(i, j int) bool {
+	if a[i].IsDir() && a[j].IsDir() {
+		return a[i].Name() < a[j].Name()
+	} else if a[i].IsDir() {
+		return true
+	} else if a[j].IsDir() {
+		return false
+	}
+	return a[i].Name() < a[j].Name()
+}
 
 func indexTandler(w http.ResponseWriter, r *http.Request) {
 	decodedValue, _ := url.QueryUnescape(r.URL.String())
 	path := imgPath + decodedValue
+	fmt.Println("path : " + path)
 
 	if decodedValue != "/" && !fileExists(path) {
 		return
@@ -62,16 +71,13 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if i == 0 && decodedValue != "/" {
-			fmt.Fprintf(w, "<td class='equalDivide'>")
-			fmt.Fprintf(w, "<a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
-			fmt.Fprintf(w, "<br>..")
-			fmt.Fprintf(w, "</td>")
+			fmt.Fprintf(w, "<td class='equalDivide'><a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a><br>..</td>")
 			i++
 		}
 
 		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
-			fmt.Fprintf(w, "<a href=\"."+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
+			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
 			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' style='width:100%%;' onClick='thumbClick(\"http://"+r.Host+"/"+path+"/"+f.Name()+"\")' name='myBtn'>")
@@ -98,7 +104,6 @@ func makeThumbnail(filename string) {
 		return
 	}
 
-	// load original image
 	img, err := imaging.Open(filename)
 
 	if err != nil {
@@ -142,6 +147,8 @@ func explorerDirectory(path string) {
 
 func main() {
 	initServer()
+
+	fmt.Println("init complete. server start")
 
 	http.HandleFunc("/", indexTandler)
 	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(imgPath))))
