@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
-	"time"
+	"strings"
 
 	"github.com/disintegration/imaging"
 )
@@ -39,13 +39,15 @@ func (a FileSort) Less(i, j int) bool { return a[i].IsDir() || a[i].Name() < a[j
 func indexTandler(w http.ResponseWriter, r *http.Request) {
 	decodedValue, _ := url.QueryUnescape(r.URL.String())
 	path := imgPath + decodedValue
-	fmt.Println(imgPath + decodedValue)
 
 	if decodedValue != "/" && !fileExists(path) {
 		return
 	}
 
-	fmt.Fprintf(w, "<html><head><title>Ahat Simple Gallary</title><style>.modal {  display: none;  position: fixed;   z-index: 1;  padding-top: 100px;  left: 0;  top: 0;  width: 100%%;  height: 100%%;  overflow: auto;  background-color: rgb(0,0,0);  background-color: rgba(0,0,0,0.4);}.modal-content {  background-color: #fefefe;  margin: auto;  padding: 20px;  border: 1px solid #888;  width: 80%%; margin-bottom: 30%%;}</style></head><body><div id='myModal' class='modal'>  <div class='modal-content'>    <span class='close'>&times;</span>    <p><img src='https://blog.jinbo.net/attach/615/200937431.jpg' style='width: 100%%' id='myImg'></p>  </div></div>")
+	data, _ := ioutil.ReadFile("./assets/index.html.ahat")
+	str := fmt.Sprintf("%s", data)
+
+	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
 
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
@@ -55,29 +57,35 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	sort.Sort(FileSort(files))
 
 	for i, f := range files {
-		if i%5 == 0 {
-			fmt.Fprintf(w, "<br>")
+		if (i+1)%5 == 0 {
+			fmt.Fprintf(w, "</tr><tr>")
 		}
 
-		fmt.Println("1: " + f.Name())
-		fmt.Println("2: " + decodedValue)
-		fmt.Println("3: " + imgPath)
+		if i == 0 && decodedValue != "/" {
+			fmt.Fprintf(w, "<td class='equalDivide'>")
+			fmt.Fprintf(w, "<a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
+			fmt.Fprintf(w, "<br>..")
+			fmt.Fprintf(w, "</td>")
+			i++
+		}
 
+		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
-			fmt.Fprintf(w, "<a href=\""+decodedValue+"/"+f.Name()+"\"><img src='assets/directory.png' style='width:20%%;'></a>")
-			fmt.Println("4: <a href=\"" + decodedValue + "/" + f.Name() + "\"><img src='assets/directory.png' style='width:20%%;'></a>")
+			fmt.Fprintf(w, "<a href=\"."+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
+			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' style='width:20%%;' onClick='thumbClick(\""+path+"/"+f.Name()+"\")' name='myBtn'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' style='width:100%%;' onClick='thumbClick(\"http://"+r.Host+"/"+path+"/"+f.Name()+"\")' name='myBtn'>")
+			fmt.Fprintf(w, "<br>"+f.Name())
 		}
+		fmt.Fprintf(w, "</td>")
 	}
-	fmt.Fprintf(w, "<script src='/assets/script.js'></script>")
-	fmt.Fprintf(w, "</body></html>")
+	fmt.Fprintf(w, "</tr>")
+	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:])
 }
 
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
-		fmt.Println(err)
 		return false
 	}
 	return true
@@ -89,8 +97,6 @@ func makeThumbnail(filename string) {
 	if fileExists(thumbname) {
 		return
 	}
-
-	fmt.Println(thumbname)
 
 	// load original image
 	img, err := imaging.Open(filename)
@@ -110,17 +116,11 @@ func makeThumbnail(filename string) {
 }
 
 func initServer() {
-	t := time.Now()
-	fmt.Println("A : ", t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
-
 	os.MkdirAll(imgPath, os.ModePerm)
 	os.MkdirAll(thumPath, os.ModePerm)
 	os.MkdirAll(assetPath, os.ModePerm)
 
 	explorerDirectory(imgPath)
-
-	t = time.Now()
-	fmt.Println("B : ", t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
 }
 
 func explorerDirectory(path string) {
@@ -143,14 +143,13 @@ func explorerDirectory(path string) {
 func main() {
 	initServer()
 
-	//기본 Url 핸들러 메소드 지정
 	http.HandleFunc("/", indexTandler)
 	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(imgPath))))
 	http.Handle("/thumbnail/", http.StripPrefix("/thumbnail/", http.FileServer(http.Dir(thumPath))))
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetPath))))
-	//서버 시작
+
 	err := http.ListenAndServe(":9090", nil)
-	//예외 처리
+
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	} else {
