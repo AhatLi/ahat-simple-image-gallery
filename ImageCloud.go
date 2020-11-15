@@ -8,7 +8,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"sort"
+	"time"
 
 	"github.com/disintegration/imaging"
 )
@@ -26,32 +29,45 @@ func imgToBase64(file string) string {
 	return "data:image/png;base64," + encoded
 }
 
-func indexTandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL)
+//FileSort  aaa
+type FileSort []os.FileInfo
 
-	if r.URL.String() != "/" && !fileExists(r.URL.String()) {
+func (a FileSort) Len() int           { return len(a) }
+func (a FileSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a FileSort) Less(i, j int) bool { return a[i].IsDir() || a[i].Name() < a[j].Name() }
+
+func indexTandler(w http.ResponseWriter, r *http.Request) {
+	decodedValue, _ := url.QueryUnescape(r.URL.String())
+	path := imgPath + decodedValue
+	fmt.Println(imgPath + decodedValue)
+
+	if decodedValue != "/" && !fileExists(path) {
 		return
 	}
 
-	fmt.Fprintf(w, "<html><head><style>.modal {  display: none;  position: fixed;   z-index: 1;  padding-top: 100px;  left: 0;  top: 0;  width: 100%%;  height: 100%%;  overflow: auto;  background-color: rgb(0,0,0);  background-color: rgba(0,0,0,0.4);}.modal-content {  background-color: #fefefe;  margin: auto;  padding: 20px;  border: 1px solid #888;  width: 80%%;}</style></head><body><div id='myModal' class='modal'>  <div class='modal-content'>    <span class='close'>&times;</span>    <p><img src='https://blog.jinbo.net/attach/615/200937431.jpg' style='width: 100%%;padding-bottom: 25%%' id='myImg'></p>  </div></div>")
-	fmt.Fprintf(w, "<h1>Whoa, Go is neat!</h1>")
-	fmt.Fprintf(w, "<title>Go</title>")
+	fmt.Fprintf(w, "<html><head><title>Ahat Simple Gallary</title><style>.modal {  display: none;  position: fixed;   z-index: 1;  padding-top: 100px;  left: 0;  top: 0;  width: 100%%;  height: 100%%;  overflow: auto;  background-color: rgb(0,0,0);  background-color: rgba(0,0,0,0.4);}.modal-content {  background-color: #fefefe;  margin: auto;  padding: 20px;  border: 1px solid #888;  width: 80%%; margin-bottom: 30%%;}</style></head><body><div id='myModal' class='modal'>  <div class='modal-content'>    <span class='close'>&times;</span>    <p><img src='https://blog.jinbo.net/attach/615/200937431.jpg' style='width: 100%%' id='myImg'></p>  </div></div>")
 
-	path := thumPath + imgPath + r.URL.String()
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
 		log.Fatal(errf)
 	}
+
+	sort.Sort(FileSort(files))
 
 	for i, f := range files {
 		if i%5 == 0 {
 			fmt.Fprintf(w, "<br>")
 		}
 
+		fmt.Println("1: " + f.Name())
+		fmt.Println("2: " + decodedValue)
+		fmt.Println("3: " + imgPath)
+
 		if f.IsDir() {
-			//	explorerDirectory(path + f.Name())'"+imgPath+r.URL.String()+f.Name()+"'
+			fmt.Fprintf(w, "<a href=\""+decodedValue+"/"+f.Name()+"\"><img src='assets/directory.png' style='width:20%%;'></a>")
+			fmt.Println("4: <a href=\"" + decodedValue + "/" + f.Name() + "\"><img src='assets/directory.png' style='width:20%%;'></a>")
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(path+f.Name())+"' style='width:20%%;' onClick='thumbClick(\""+imgPath+r.URL.String()+f.Name()+"\")' name='myBtn'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' style='width:20%%;' onClick='thumbClick(\""+path+"/"+f.Name()+"\")' name='myBtn'>")
 		}
 	}
 	fmt.Fprintf(w, "<script src='/assets/script.js'></script>")
@@ -59,22 +75,29 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
+	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
+		fmt.Println(err)
 		return false
 	}
-	return !info.IsDir()
+	return true
 }
 
 func makeThumbnail(filename string) {
 	thumbname := thumPath + filename
+
+	if fileExists(thumbname) {
+		return
+	}
+
+	fmt.Println(thumbname)
 
 	// load original image
 	img, err := imaging.Open(filename)
 
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return
 	}
 
 	thumbnail := imaging.CropCenter(imaging.Resize(img, 80, 0, imaging.Lanczos), 80, 80)
@@ -82,16 +105,22 @@ func makeThumbnail(filename string) {
 
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return
 	}
 }
 
 func initServer() {
+	t := time.Now()
+	fmt.Println("A : ", t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
+
 	os.MkdirAll(imgPath, os.ModePerm)
 	os.MkdirAll(thumPath, os.ModePerm)
 	os.MkdirAll(assetPath, os.ModePerm)
 
 	explorerDirectory(imgPath)
+
+	t = time.Now()
+	fmt.Println("B : ", t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
 }
 
 func explorerDirectory(path string) {
@@ -102,8 +131,9 @@ func explorerDirectory(path string) {
 	}
 
 	for _, f := range files {
+
 		if f.IsDir() {
-			explorerDirectory(path + f.Name())
+			explorerDirectory(path + "/" + f.Name())
 		} else {
 			makeThumbnail(path + "/" + f.Name())
 		}
