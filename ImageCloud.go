@@ -64,17 +64,16 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sort.Sort(FileSort(files))
+	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
+
+	if decodedValue != "/" {
+		fmt.Fprintf(w, "<td class='equalDivide'><a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a><br>..</td>")
+	}
 
 	for i, f := range files {
-		if (i+1)%5 == 0 {
+		if (i+1)%4 == 0 {
 			fmt.Fprintf(w, "</tr><tr>")
 		}
-
-		if i == 0 && decodedValue != "/" {
-			fmt.Fprintf(w, "<td class='equalDivide'><a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a><br>..</td>")
-			i++
-		}
-
 		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
 			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
@@ -85,6 +84,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintf(w, "</td>")
 	}
+
 	fmt.Fprintf(w, "</tr>")
 	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:])
 }
