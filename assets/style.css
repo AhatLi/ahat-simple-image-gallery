@@ -49,3 +49,13 @@ overflow: hidden;
 text-overflow:ellipsis;
 white-space:nowrap;
 }
+
+img
+{
+width: 100%;
+}
+
+.checked_img
+{
+filter: brightness(30%);
+}

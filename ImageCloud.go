@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/disintegration/imaging"
@@ -67,7 +68,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
 
 	if decodedValue != "/" {
-		fmt.Fprintf(w, "<td class='equalDivide'><a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a><br>..</td>")
+		fmt.Fprintf(w, "<td class='equalDivide'><a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
 	}
 
 	for i, f := range files {
@@ -76,10 +77,10 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
-			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png' style='width:100%%;'></a>")
+			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' style='width:100%%;' onClick='thumbClick(\"http://"+r.Host+"/"+path+"/"+f.Name()+"\")' name='myBtn'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+path+"/"+f.Name()+"'>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		}
 		fmt.Fprintf(w, "</td>")
