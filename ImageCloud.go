@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"image/color"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -80,7 +81,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name())+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+path+"/"+f.Name()+"'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+path+"/"+f.Name()+"'>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		}
 		fmt.Fprintf(w, "</td>")
@@ -112,8 +113,16 @@ func makeThumbnail(filename string) {
 		return
 	}
 
-	thumbnail := imaging.CropCenter(imaging.Resize(img, 80, 0, imaging.Lanczos), 80, 80)
-	err = imaging.Save(thumbnail, thumbname)
+	thumbnail := imaging.Thumbnail(img, 80, 80, imaging.Linear)
+	thumbnail = imaging.AdjustFunc(
+		thumbnail,
+		func(c color.NRGBA) color.NRGBA {
+			return color.NRGBA{c.R + uint8(255), c.G + uint8(255), c.B + uint8(255), uint8(255)}
+		},
+	)
+
+	//	imaging.Encode(os.Stdout, thumbnail, imaging.JPEG)
+	err = imaging.Save(thumbnail, thumbname+".jpg")
 
 	if err != nil {
 		fmt.Println(err)
