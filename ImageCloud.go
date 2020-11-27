@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bufio"
-	"encoding/base64"
 	"fmt"
-	"image/color"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,40 +10,26 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/disintegration/imaging"
 )
 
 const imgPath string = "images/"
 const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
-func imgToBase64(file string) string {
-	f, _ := os.Open(file)
-	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
-	encoded := base64.StdEncoding.EncodeToString(content)
-
-	return "data:image/png;base64," + encoded
-}
-
-//FileSort  aaa
-type FileSort []os.FileInfo
-
-func (a FileSort) Len() int      { return len(a) }
-func (a FileSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a FileSort) Less(i, j int) bool {
-	if a[i].IsDir() && a[j].IsDir() {
-		return a[i].Name() < a[j].Name()
-	} else if a[i].IsDir() {
-		return true
-	} else if a[j].IsDir() {
-		return false
-	}
-	return a[i].Name() < a[j].Name()
-}
-
 func indexTandler(w http.ResponseWriter, r *http.Request) {
+
+	data, _ := ioutil.ReadFile("./assets/index.html.ahat")
+	str := fmt.Sprintf("%s", data)
+
+	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
+
+	displayImages(w, r)
+
+	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:])
+}
+
+func displayImages(w http.ResponseWriter, r *http.Request) {
+
 	decodedValue, _ := url.QueryUnescape(r.URL.String())
 	path := imgPath + decodedValue
 	fmt.Println("path : " + path)
@@ -55,11 +38,6 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, _ := ioutil.ReadFile("./assets/index.html.ahat")
-	str := fmt.Sprintf("%s", data)
-
-	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
-
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
 		log.Fatal(errf)
@@ -67,10 +45,8 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 
 	sort.Sort(FileSort(files))
 	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
-
-	if decodedValue != "/" {
-		fmt.Fprintf(w, "<td class='equalDivide'><a href=\"..\"><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
-	}
+	fmt.Fprintf(w, "<td class='equalDivide'><a href='..'><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
+	fmt.Println("<a href='http://" + r.Host + "" + decodedValue + "..'>")
 
 	for i, f := range files {
 		if (i+1)%4 == 0 {
@@ -78,7 +54,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
-			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
+			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
 			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+path+"/"+f.Name()+"'>")
@@ -88,46 +64,6 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "</tr>")
-	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:])
-}
-
-func fileExists(filename string) bool {
-	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-func makeThumbnail(filename string) {
-	thumbname := thumPath + filename
-
-	if fileExists(thumbname) {
-		return
-	}
-
-	img, err := imaging.Open(filename)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	thumbnail := imaging.Thumbnail(img, 80, 80, imaging.Linear)
-	thumbnail = imaging.AdjustFunc(
-		thumbnail,
-		func(c color.NRGBA) color.NRGBA {
-			return color.NRGBA{c.R + uint8(255), c.G + uint8(255), c.B + uint8(255), uint8(255)}
-		},
-	)
-
-	//	imaging.Encode(os.Stdout, thumbnail, imaging.JPEG)
-	err = imaging.Save(thumbnail, thumbname+".jpg")
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 }
 
 func initServer() {
@@ -138,25 +74,10 @@ func initServer() {
 	explorerDirectory(imgPath)
 }
 
-func explorerDirectory(path string) {
-	os.MkdirAll(thumPath+path, os.ModePerm)
-	files, errf := ioutil.ReadDir(path)
-	if errf != nil {
-		log.Fatal(errf)
-	}
-
-	for _, f := range files {
-
-		if f.IsDir() {
-			explorerDirectory(path + "/" + f.Name())
-		} else {
-			makeThumbnail(path + "/" + f.Name())
-		}
-	}
-}
-
 func main() {
 	initServer()
+
+	getAllDirPath()
 
 	fmt.Println("init complete. server start")
 
@@ -168,7 +89,7 @@ func main() {
 	err := http.ListenAndServe(":9090", nil)
 
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		fmt.Println("ListenAndServe:" + err.Error())
 	} else {
 		fmt.Println("ListenAndServe Started! -> Port(9090)")
 	}
