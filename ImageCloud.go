@@ -43,6 +43,8 @@ func apiTandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("." + r.PostFormValue("source") + file)
 		fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
 		fmt.Println()
+
+		//err = os.Remove(thumPath + r.PostFormValue("source") + file + ".jpg")
 		err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
 		if err != nil {
 			log.Fatal("remove error2 : " + err.Error())

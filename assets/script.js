@@ -5,7 +5,7 @@ var img = document.getElementById("myImg");
 
 var timer;
 var istrue = false;
-var delay = 1000;
+var delay = 500;
 var isCheckMode = false;
 var checkedCount = 0;
 
@@ -120,4 +120,6 @@ function goPost()
 
   document.body.appendChild(form);
   form.submit();
+
+  location.reload();
 }

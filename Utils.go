@@ -33,6 +33,7 @@ func imgToBase64(file string) string {
 	reader := bufio.NewReader(f)
 	content, _ := ioutil.ReadAll(reader)
 	encoded := base64.StdEncoding.EncodeToString(content)
+	f.Close()
 
 	return "data:image/png;base64," + encoded
 }
