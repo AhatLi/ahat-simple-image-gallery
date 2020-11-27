@@ -70,3 +70,29 @@ function revert()
 {
    istrue =false;
 }
+
+function goPost()
+{
+  var list = document.getElementsByClassName('checked_img');
+  var name = [];
+  for(var i = 0; i < list.length; i++)
+  {
+    name.push(list[i].name.substring(list[i].name.lastIndexOf('/')+1))
+  }
+
+  var form = document.createElement("form");
+  form.setAttribute("method", "POST");
+  form.setAttribute("action", "/api/input");
+  form.setAttribute("target", "iframe1");
+
+  //히든으로 값을 주입시킨다.
+  var hiddenField = document.createElement("input");
+  hiddenField.setAttribute("type", "hidden");
+  hiddenField.setAttribute("name", "test");
+  hiddenField.setAttribute("value", name);
+
+  form.appendChild(hiddenField);
+
+  document.body.appendChild(form);
+  form.submit();
+}

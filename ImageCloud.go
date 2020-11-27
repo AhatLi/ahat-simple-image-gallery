@@ -25,7 +25,20 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 
 	displayImages(w, r)
 
-	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:])
+	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:strings.LastIndex(str, "#select")])
+
+	makeSelect(w)
+
+	fmt.Fprintf(w, str[strings.LastIndex(str, "#select")+8:])
+}
+
+func apiTandler(w http.ResponseWriter, r *http.Request) {
+
+	decodedValue, _ := url.QueryUnescape(r.URL.String())
+	path := imgPath + decodedValue
+	fmt.Println("path : " + path)
+
+	fmt.Println(r.PostFormValue("test"))
 }
 
 func displayImages(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +79,20 @@ func displayImages(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "</tr>")
 }
 
+func makeSelect(w http.ResponseWriter) {
+
+	var dir []string
+	getDirPath("./images", &dir)
+
+	fmt.Fprintf(w, "<select id='selectDir'>")
+
+	fmt.Fprintf(w, "<option>filemove</option>")
+	for _, d := range dir {
+		fmt.Fprintf(w, "<option>"+d+"</option>")
+	}
+	fmt.Fprintf(w, "</select>")
+}
+
 func initServer() {
 	os.MkdirAll(imgPath, os.ModePerm)
 	os.MkdirAll(thumPath, os.ModePerm)
@@ -77,14 +104,13 @@ func initServer() {
 func main() {
 	initServer()
 
-	getAllDirPath()
-
 	fmt.Println("init complete. server start")
 
-	http.HandleFunc("/", indexTandler)
 	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(imgPath))))
 	http.Handle("/thumbnail/", http.StripPrefix("/thumbnail/", http.FileServer(http.Dir(thumPath))))
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetPath))))
+	http.HandleFunc("/api/", apiTandler)
+	http.HandleFunc("/", indexTandler)
 
 	err := http.ListenAndServe(":9090", nil)
 

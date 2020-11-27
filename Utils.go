@@ -45,31 +45,16 @@ func fileExists(filename string) bool {
 	return true
 }
 
-func getAllDirPath() {
-	var dir []string
-	getDirPath("./images", &dir, 0)
-
-	for _, d := range dir {
-		fmt.Println(d)
-	}
-
-}
-
-func getDirPath(path string, dir *[]string, level int) {
+func getDirPath(path string, dir *[]string) {
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
 		log.Fatal(errf)
 	}
 
-	b := ""
-	for i := 0; i < level; i++ {
-		b += "  "
-	}
-
 	for _, f := range files {
 		if f.IsDir() {
-			*dir = append(*dir, b+f.Name())
-			getDirPath(path+"/"+f.Name(), dir, level+1)
+			*dir = append(*dir, path[8:]+"/"+f.Name())
+			getDirPath(path+"/"+f.Name(), dir)
 		}
 	}
 }
