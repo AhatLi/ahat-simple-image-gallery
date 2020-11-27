@@ -34,11 +34,22 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 
 func apiTandler(w http.ResponseWriter, r *http.Request) {
 
-	decodedValue, _ := url.QueryUnescape(r.URL.String())
-	path := imgPath + decodedValue
-	fmt.Println("path : " + path)
+	files := strings.Split(r.PostFormValue("files"), ",")
+	for _, file := range files {
+		err := os.Rename(r.PostFormValue("source")+file, "images"+r.PostFormValue("dest")+"/"+file)
+		if err != nil {
+			log.Fatal("remove error1 : " + err.Error())
+		}
+		fmt.Println("." + r.PostFormValue("source") + file)
+		fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
+		fmt.Println()
+		err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
+		if err != nil {
+			log.Fatal("remove error2 : " + err.Error())
+		}
+		fmt.Println()
+	}
 
-	fmt.Println(r.PostFormValue("test"))
 }
 
 func displayImages(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +97,7 @@ func makeSelect(w http.ResponseWriter) {
 
 	fmt.Fprintf(w, "<select id='selectDir'>")
 
-	fmt.Fprintf(w, "<option>filemove</option>")
+	fmt.Fprintf(w, "<option>-filemove-</option>")
 	for _, d := range dir {
 		fmt.Fprintf(w, "<option>"+d+"</option>")
 	}

@@ -23,7 +23,6 @@
 
 #select
 
-<button onclick="selectDir()">filemove</button>
 <input type="submit" value="전송" onClick="goPost()" />
 <iframe id="iframe1" name="iframe1" style="display:none"></iframe>
 </div>

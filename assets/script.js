@@ -73,12 +73,26 @@ function revert()
 
 function goPost()
 {
+  var e = document.getElementById("selectDir");
+  var destDir = e.value;
+  if(destDir == '-filemove-')
+  {
+    return;
+  }
+
   var list = document.getElementsByClassName('checked_img');
+  if(list.length == 0)
+  {
+    return;
+  }
+
   var name = [];
   for(var i = 0; i < list.length; i++)
   {
     name.push(list[i].name.substring(list[i].name.lastIndexOf('/')+1))
   }
+
+  sourceDir = list[0].name.substring(list[0].name.indexOf('images'), list[0].name.lastIndexOf('/')+1)
 
   var form = document.createElement("form");
   form.setAttribute("method", "POST");
@@ -88,9 +102,20 @@ function goPost()
   //히든으로 값을 주입시킨다.
   var hiddenField = document.createElement("input");
   hiddenField.setAttribute("type", "hidden");
-  hiddenField.setAttribute("name", "test");
+  hiddenField.setAttribute("name", "files");
   hiddenField.setAttribute("value", name);
+  form.appendChild(hiddenField);
 
+  hiddenField = document.createElement("input");
+  hiddenField.setAttribute("type", "hidden");
+  hiddenField.setAttribute("name", "dest");
+  hiddenField.setAttribute("value", destDir);
+  form.appendChild(hiddenField);
+
+  hiddenField = document.createElement("input");
+  hiddenField.setAttribute("type", "hidden");
+  hiddenField.setAttribute("name", "source");
+  hiddenField.setAttribute("value", sourceDir);
   form.appendChild(hiddenField);
 
   document.body.appendChild(form);
