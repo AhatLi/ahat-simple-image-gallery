@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/disintegration/imaging"
 )
@@ -63,7 +64,7 @@ func getDirPath(path string, dir *[]string) {
 func makeThumbnail(filename string) {
 	thumbname := thumPath + filename
 
-	if fileExists(thumbname) {
+	if fileExists(thumbname + ".jpg") {
 		return
 	}
 
@@ -102,8 +103,13 @@ func explorerDirectory(path string) {
 
 		if f.IsDir() {
 			explorerDirectory(path + "/" + f.Name())
-		} else {
+			fmt.Println(path + "/" + f.Name())
+		} else if isImage(f.Name()) {
 			makeThumbnail(path + "/" + f.Name())
 		}
 	}
+}
+
+func isImage(filename string) bool {
+	return strings.HasSuffix(filename, ".jpg") || strings.HasSuffix(filename, ".png") || strings.HasSuffix(filename, ".gif") || strings.HasSuffix(filename, ".jpeg")
 }

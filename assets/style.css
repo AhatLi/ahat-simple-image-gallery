@@ -1,4 +1,8 @@
 
+body
+{
+    margin-bottom: 300px;
+}
     
 .modal 
 {  
@@ -28,11 +32,14 @@ margin-bottom: 30%;
 }
 
 .bot-item
-{  
-position: absolute;
-bottom: 0px;
-width: 100%;
-border: solid;
+{        
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 99.4%;
+    border: solid;
+    height:100px;
+    background: white;
 }
 
 .equalDivide
@@ -48,11 +55,24 @@ text-align:center;
 overflow: hidden;
 text-overflow:ellipsis;
 white-space:nowrap;
+font-size: 1.5em;
 }
 
 img
 {
 width: 100%;
+}
+
+select
+{
+font-size: 1.5em;
+height: 100%;
+}
+
+input
+{
+font-size: 1.5em;
+height: 100%;
 }
 
 .checked_img

@@ -23,7 +23,8 @@
 
 #select
 
-<input type="submit" value="전송" onClick="goPost()" />
+<input type="submit" value="이동" onClick="goPost()" />
+<input type="submit" value="해제" onClick="removeSelect()" />
 <iframe id="iframe1" name="iframe1" style="display:none"></iframe>
 </div>
 

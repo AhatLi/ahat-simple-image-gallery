@@ -5,7 +5,7 @@ var img = document.getElementById("myImg");
 
 var timer;
 var istrue = false;
-var delay = 500;
+var delay = 2000;
 var isCheckMode = false;
 var checkedCount = 0;
 
@@ -66,6 +66,7 @@ function makeChange(id)
     isCheckMode = true;
   }
 }
+
 function revert()
 {
    istrue =false;
@@ -122,4 +123,16 @@ function goPost()
   form.submit();
 
   location.reload();
+}
+
+function removeSelect()
+{
+  const list = document.getElementsByClassName('checked_img');
+
+  for(var i = 0; i != list.length;)
+  {
+    list[0].classList.remove("checked_img");
+  }
+  
+  isCheckMode = false;
 }
