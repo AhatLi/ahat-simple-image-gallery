@@ -5,7 +5,7 @@ var img = document.getElementById("myImg");
 
 var timer;
 var istrue = false;
-var delay = 2000;
+var delay = 1000;
 var isCheckMode = false;
 var checkedCount = 0;
 
@@ -67,9 +67,16 @@ function makeChange(id)
   }
 }
 
+document.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    istrue =false;
+    clearTimeout(timer);
+}, false);
+
 function revert()
 {
    istrue =false;
+   clearTimeout(timer);
 }
 
 function goPost()
@@ -135,4 +142,5 @@ function removeSelect()
   }
   
   isCheckMode = false;
+  checkedCount = 0;
 }
