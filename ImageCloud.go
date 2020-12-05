@@ -17,19 +17,22 @@ const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
 func indexTandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("RemoteAddr : " + r.RemoteAddr)
 
 	data, _ := ioutil.ReadFile("./assets/index.html.ahat")
 	str := fmt.Sprintf("%s", data)
 
-	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
-
-	displayImages(w, r)
-
-	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:strings.LastIndex(str, "#select")])
+	fmt.Fprintf(w, str[:strings.Index(str, "#select")])
+	//	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:strings.LastIndex(str, "#select")])
 
 	makeSelect(w)
 
-	fmt.Fprintf(w, str[strings.LastIndex(str, "#select")+8:])
+	fmt.Fprintf(w, str[strings.LastIndex(str, "#select")+8:strings.LastIndex(str, "#content")])
+	//	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
+
+	displayImages(w, r)
+
+	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+8:])
 }
 
 func apiTandler(w http.ResponseWriter, r *http.Request) {

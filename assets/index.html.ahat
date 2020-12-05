@@ -7,9 +7,15 @@
 </head>
 <body>
 <div id='myModal' class='modal'>  
-<div class='modal-content'>
+<div id='modalImage' class='modal-content'>
 <span class="close">×</span>
 <p><img src='#' style='width: 100%%' id='myImg'></p>  
+</div>
+<div id='modalSelect' class='modal-content'>
+#select
+
+<input type="submit" value="이동123" onClick="goPost()"/>
+
 </div>
 </div>
 
@@ -21,10 +27,16 @@
 
 <div class="bot-item">
 
-#select
-
-<input type="submit" value="이동" onClick="goPost()" />
-<input type="submit" value="해제" onClick="removeSelect()" />
+<table style='height: 100%%; width: 100%%' class="equalDivide">
+<tr>
+<td>
+<input type="submit" value="이동" onClick="movdImage()" class="checkedItem"/>
+</td>
+<td>
+<input type="submit" value="해제" onClick="removeSelect()" class="checkedItem"/>
+</td>
+</tr>
+</table>
 <iframe id="iframe1" name="iframe1" style="display:none"></iframe>
 </div>
 

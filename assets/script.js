@@ -2,6 +2,8 @@ var modal = document.getElementById("myModal");
 var btn = document.getElementsByName("myBtn");
 var span = document.getElementsByClassName("close")[0];
 var img = document.getElementById("myImg");
+var imgLayer = document.getElementById("modalImage");
+var selectLayer = document.getElementById("modalSelect");
 
 var timer;
 var istrue = false;
@@ -26,13 +28,24 @@ function thumbClick(id)
       checkedCount++;
     }
     if(checkedCount == 0)
-      isCheckMode = false;
+      DisableCheckMode();
   }
   else
   {
     modal.style.display = "block";
+    imgLayer.style.display = "block";
+    selectLayer.style.display = "none";
     img.src = element.name;
   }
+
+  console.log('count : ' + checkedCount);
+}
+
+function movdImage()
+{
+  modal.style.display = "block";
+  imgLayer.style.display = "none";
+  selectLayer.style.display = "block";
 }
 
 span.onclick = function() {
@@ -54,16 +67,19 @@ function func(id)
 function makeChange(id)
 {
   if(timer)
-  clearTimeout(timer);
+    clearTimeout(timer);
+    
+  if(isCheckMode)
+    return;
   
   if(istrue)
   {
+    console.log('makeChange');
     var element = document.getElementById(id);
     element.classList.add("checked_img");
     checkedCount++;
     
-    console.log(element.name);
-    isCheckMode = true;
+    EnableCheckMode();
   }
 }
 
@@ -140,7 +156,29 @@ function removeSelect()
   {
     list[0].classList.remove("checked_img");
   }
-  
-  isCheckMode = false;
+
+  DisableCheckMode();
   checkedCount = 0;
+}
+
+function EnableCheckMode()
+{
+  isCheckMode = true;
+  const list = document.getElementsByClassName('checkedItem');
+
+  for(var i = 0; i < list.length; i++)
+  {
+    list[i].style.display = "block";
+  }
+}
+
+function DisableCheckMode()
+{
+  isCheckMode = false;
+  const list = document.getElementsByClassName('checkedItem');
+
+  for(var i = 0; i < list.length; i++)
+  {
+    list[i].style.display = "none";
+  }
 }
