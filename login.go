@@ -94,14 +94,15 @@ func logoutHandler(response http.ResponseWriter, request *http.Request) {
 // index page
 
 const indexPage = `
+<body style='font-size: 5em;'>
+<link href="/assets/style.css" rel="stylesheet">
 <h1>Login</h1>
 <form method="post" action="/login">
-    <label for="name">User name</label>
-    <input type="text" id="name" name="name">
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password">
-    <button type="submit">Login</button>
+	<input type="text" id="name" name="name" class="loginInput" placeholder="ID"><br>
+	<input type="password" id="password" name="password" class="loginInput" placeholder="PASSWORD"><br><br>
+    <input type="submit" value="Login"/>
 </form>
+</body>
 `
 
 func indexPageHandler(response http.ResponseWriter, request *http.Request) {

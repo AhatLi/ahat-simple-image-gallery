@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -43,7 +42,7 @@ func apiTandler(w http.ResponseWriter, r *http.Request) {
 	for _, file := range files {
 		err := os.Rename(r.PostFormValue("source")+file, "images"+r.PostFormValue("dest")+"/"+file)
 		if err != nil {
-			log.Fatal("Rename error1 : " + err.Error())
+			fmt.Println("Rename error1 : " + err.Error())
 		}
 		fmt.Println("." + r.PostFormValue("source") + file)
 		fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
@@ -51,7 +50,7 @@ func apiTandler(w http.ResponseWriter, r *http.Request) {
 
 		err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
 		if err != nil {
-			log.Fatal("Rename error2 : " + err.Error())
+			fmt.Println("Rename error2 : " + err.Error())
 		}
 		fmt.Println()
 	}
@@ -70,7 +69,7 @@ func displayImages(w http.ResponseWriter, r *http.Request) {
 
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
-		log.Fatal(errf)
+		fmt.Println(errf)
 	}
 
 	sort.Sort(FileSort(files))

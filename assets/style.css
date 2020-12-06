@@ -1,7 +1,6 @@
-
 body
 {
-    margin-bottom: 300px;
+margin-bottom: 300px;
 }
     
 .modal 
@@ -33,13 +32,13 @@ margin-bottom: 30%;
 
 .bot-item
 {        
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 99.4%;
-    border: solid;
-    height:100px;
-    background: white;
+position: fixed;
+bottom: 0;
+left: 0;
+width: 99.4%;
+border: solid;
+height:100px;
+background: white;
 }
 
 .equalDivide
@@ -65,7 +64,12 @@ width: 100%;
 
 select
 {
-font-size: 1.5em;
+font-size: 5em;
+}
+
+select option
+{
+font-size: 0.5em;
 }
 
 input
@@ -80,7 +84,13 @@ filter: brightness(30%);
 
 .checkedItem
 {
-    display: none;  
-    width: 100%;
-    height: 80%;
+display: none;  
+width: 100%;
+height: 80%;
+}
+
+input 
+{
+border: solid 0.2em;
+width: 100%;
 }
