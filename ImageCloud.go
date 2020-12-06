@@ -17,22 +17,24 @@ const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
 func indexTandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("RemoteAddr : " + r.RemoteAddr)
+	if loginCheck(w, r) {
+		fmt.Println("RemoteAddr : " + r.RemoteAddr)
 
-	data, _ := ioutil.ReadFile("./assets/index.html.ahat")
-	str := fmt.Sprintf("%s", data)
+		data, _ := ioutil.ReadFile("./assets/index.html.ahat")
+		str := fmt.Sprintf("%s", data)
 
-	fmt.Fprintf(w, str[:strings.Index(str, "#select")])
-	//	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:strings.LastIndex(str, "#select")])
+		fmt.Fprintf(w, str[:strings.Index(str, "#select")])
+		//	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:strings.LastIndex(str, "#select")])
 
-	makeSelect(w)
+		makeSelect(w)
 
-	fmt.Fprintf(w, str[strings.LastIndex(str, "#select")+8:strings.LastIndex(str, "#content")])
-	//	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
+		fmt.Fprintf(w, str[strings.LastIndex(str, "#select")+8:strings.LastIndex(str, "#content")])
+		//	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
 
-	displayImages(w, r)
+		displayImages(w, r)
 
-	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+8:])
+		fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+8:])
+	}
 }
 
 func apiTandler(w http.ResponseWriter, r *http.Request) {
@@ -41,16 +43,15 @@ func apiTandler(w http.ResponseWriter, r *http.Request) {
 	for _, file := range files {
 		err := os.Rename(r.PostFormValue("source")+file, "images"+r.PostFormValue("dest")+"/"+file)
 		if err != nil {
-			log.Fatal("remove error1 : " + err.Error())
+			log.Fatal("Rename error1 : " + err.Error())
 		}
 		fmt.Println("." + r.PostFormValue("source") + file)
 		fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
 		fmt.Println()
 
-		//err = os.Remove(thumPath + r.PostFormValue("source") + file + ".jpg")
 		err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
 		if err != nil {
-			log.Fatal("remove error2 : " + err.Error())
+			log.Fatal("Rename error2 : " + err.Error())
 		}
 		fmt.Println()
 	}
@@ -122,8 +123,11 @@ func main() {
 
 	fmt.Println("init complete. server start")
 
+	http.HandleFunc("/main", indexPageHandler)
+	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/logout", logoutHandler)
+
 	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(imgPath))))
-	http.Handle("/thumbnail/", http.StripPrefix("/thumbnail/", http.FileServer(http.Dir(thumPath))))
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetPath))))
 	http.HandleFunc("/api/", apiTandler)
 	http.HandleFunc("/", indexTandler)
