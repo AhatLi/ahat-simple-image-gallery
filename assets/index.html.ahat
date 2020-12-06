@@ -8,13 +8,27 @@
 <body>
 <div id='myModal' class='modal'>  
 <div id='modalImage' class='modal-content'>
-<span class="close">×</span>
+
+<button style="
+    transform: translate(-8em, 40em);
+    height: 10%%;
+    width: 8%%;
+    position: absolute;
+">&lt;&lt;</button>
+
+<button style="
+    transform: translate(54.5em, 40em);
+    height: 10%%;
+    width: 8%%;
+    position: absolute;
+">&gt;&gt;</button>
+
 <p><img src='#' style='width: 100%%' id='myImg'></p>  
 </div>
 <div id='modalSelect' class='modal-content'>
 #select
 
-<input type="submit" value="이동123" onClick="goPost()"/>
+<input type="submit" value="이동" onClick="goPost()"/>
 
 </div>
 </div>
