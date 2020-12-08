@@ -1,6 +1,5 @@
 var modal = document.getElementById("myModal");
 var btn = document.getElementsByName("myBtn");
-var span = document.getElementsByClassName("close")[0];
 var img = document.getElementById("myImg");
 var imgLayer = document.getElementById("modalImage");
 var selectLayer = document.getElementById("modalSelect");
@@ -48,10 +47,6 @@ function movdImage()
   selectLayer.style.display = "block";
 }
 
-span.onclick = function() {
-  modal.style.display = "none";
-}
-
 window.onclick = function(event) {
   if (event.target == modal) {
     modal.style.display = "none";
@@ -84,7 +79,7 @@ function makeChange(id)
 }
 
 document.addEventListener('touchmove', function(e) {
-    e.preventDefault();
+  //  e.preventDefault();
     istrue =false;
     clearTimeout(timer);
 }, false);
@@ -180,5 +175,68 @@ function DisableCheckMode()
   for(var i = 0; i < list.length; i++)
   {
     list[i].style.display = "none";
+  }
+}
+
+var element = document.getElementById("modalImage");
+dragElement(element);
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos3 = 0;
+  element.onmousedown = dragMouseDown;
+	element.onpointerdown = dragMouseDown;
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    document.ontouchend = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+    document.ontouchmove = elementDrag;
+  }
+
+  function elementDrag(e) {
+
+    pos1 = e.touches[0].pageX - pos3;
+    pos3 = e.touches[0].pageX; 
+
+    var style = window.getComputedStyle(element);
+    var matrix = new WebKitCSSMatrix(style.transform);
+
+    elmnt.style.transform = "translate(" + (matrix.m41 + pos1) + "px)";
+	
+//	    if(e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend' || e.type == 'touchcancel'){
+ //       var touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+  //      x = touch.pageX;
+   //     y = touch.pageY;
+ //   } else if (e.type == 'mousedown' || e.type == 'mouseup' || e.type == 'mousemove' || e.type == 'mouseover'|| e.type=='mouseout' || e.type=='mouseenter' || e.type=='mouseleave') {
+  //      x = e.clientX;
+   //     y = e.clientY;
+  //  }
+  }
+
+  function closeDragElement() {
+
+    document.onmouseup = null;
+    document.onmousemove = null;
+    document.onpointerup = null;
+    document.onpointermove = null;
+    
+    elmnt.style.transform = "translate(" + 0 + "px)";
+
+    var style = window.getComputedStyle(element);
+    var matrix = new WebKitCSSMatrix(style.transform);
+    if((matrix.m41 + pos1) > (element.offsetWidth/3*2))
+    {
+      //다음이미지
+    }
+    else if((matrix.m41 + pos1) < (element.offsetWidth/3*2*-1))
+    {
+      //이전이미지
+    }
   }
 }

@@ -9,20 +9,6 @@
 <div id='myModal' class='modal'>  
 <div id='modalImage' class='modal-content'>
 
-<button style="
-    transform: translate(-8em, 40em);
-    height: 10%%;
-    width: 8%%;
-    position: absolute;
-">&lt;&lt;</button>
-
-<button style="
-    transform: translate(54.5em, 40em);
-    height: 10%%;
-    width: 8%%;
-    position: absolute;
-">&gt;&gt;</button>
-
 <p><img src='#' style='width: 100%%' id='myImg'></p>  
 </div>
 <div id='modalSelect' class='modal-content'>
