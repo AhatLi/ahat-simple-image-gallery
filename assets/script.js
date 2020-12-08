@@ -35,6 +35,7 @@ function thumbClick(id)
     imgLayer.style.display = "block";
     selectLayer.style.display = "none";
     img.src = element.name;
+    img.name = id;
   }
 
   console.log('count : ' + checkedCount);
@@ -71,7 +72,7 @@ function makeChange(id)
   {
     console.log('makeChange');
     var element = document.getElementById(id);
-    element.classList.add("checked_img");
+    element.classList.add("checked_img");D
     checkedCount++;
     
     EnableCheckMode();
@@ -220,6 +221,26 @@ function dragElement(elmnt) {
   }
 
   function closeDragElement() {
+    var style = window.getComputedStyle(element);
+    var matrix = new WebKitCSSMatrix(style.transform);
+    if((matrix.m41) > (element.offsetWidth/3*2))
+    { 
+      var nimg = document.getElementById('img' + (parseInt(img.name.substring(3))-1));
+      if(nimg != null)
+      {
+        img.name = 'img' + (parseInt(img.name.substring(3))-1);
+        img.src = nimg.name;
+      }
+    }
+    else if((matrix.m41) < (element.offsetWidth/3*2*-1))
+    {
+      var nimg = document.getElementById('img' + (parseInt(img.name.substring(3))+1));
+      if(nimg != null)
+      {
+        img.name = 'img' + (parseInt(img.name.substring(3))+1);
+        img.src = nimg.name;
+      }
+    }
 
     document.onmouseup = null;
     document.onmousemove = null;
@@ -227,16 +248,5 @@ function dragElement(elmnt) {
     document.onpointermove = null;
     
     elmnt.style.transform = "translate(" + 0 + "px)";
-
-    var style = window.getComputedStyle(element);
-    var matrix = new WebKitCSSMatrix(style.transform);
-    if((matrix.m41 + pos1) > (element.offsetWidth/3*2))
-    {
-      //다음이미지
-    }
-    else if((matrix.m41 + pos1) < (element.offsetWidth/3*2*-1))
-    {
-      //이전이미지
-    }
   }
 }
