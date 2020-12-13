@@ -177,7 +177,7 @@ function DisableCheckMode()
   div2.style.display = "block";
 }
 
-var element = document.getElementById("modalImage");
+var element = document.getElementById("myModal");
 dragElement(element);
 
 function dragElement(elmnt) {
