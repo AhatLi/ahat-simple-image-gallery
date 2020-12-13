@@ -72,7 +72,7 @@ function makeChange(id)
   {
     console.log('makeChange');
     var element = document.getElementById(id);
-    element.classList.add("checked_img");D
+    element.classList.add("checked_img");
     checkedCount++;
     
     EnableCheckMode();
@@ -160,23 +160,21 @@ function removeSelect()
 function EnableCheckMode()
 {
   isCheckMode = true;
-  const list = document.getElementsByClassName('checkedItem');
-
-  for(var i = 0; i < list.length; i++)
-  {
-    list[i].style.display = "block";
-  }
+  
+  var div1 = document.getElementById("bot-check");
+  var div2 = document.getElementById("bot-noncheck");
+  div1.style.display = "block";
+  div2.style.display = "none";
 }
 
 function DisableCheckMode()
 {
   isCheckMode = false;
-  const list = document.getElementsByClassName('checkedItem');
-
-  for(var i = 0; i < list.length; i++)
-  {
-    list[i].style.display = "none";
-  }
+  
+  var div1 = document.getElementById("bot-check");
+  var div2 = document.getElementById("bot-noncheck");
+  div1.style.display = "none";
+  div2.style.display = "block";
 }
 
 var element = document.getElementById("modalImage");
@@ -250,3 +248,17 @@ function dragElement(elmnt) {
     elmnt.style.transform = "translate(" + 0 + "px)";
   }
 }
+
+document.getElementById("prevPageBtn").addEventListener("click", function() {
+  if(page <= 1)
+    return;
+
+  location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page-1);
+});
+
+document.getElementById("nextPageBtn").addEventListener("click", function() {
+if(lastPage)
+  return;
+
+  location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page+1);
+});

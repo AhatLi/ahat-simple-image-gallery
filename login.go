@@ -146,3 +146,14 @@ func getUserData() (string, string) {
 
 	return confUsername, confPasswd
 }
+
+func getContentData() (int, string) {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return 100, ""
+	}
+	confUsername, _ := cfg.Section("content").Key("count").Int()
+	confPasswd := cfg.Section("content").Key("sort").String()
+
+	return confUsername, confPasswd
+}

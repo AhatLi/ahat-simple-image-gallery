@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"sort"
 	"strconv"
@@ -16,23 +16,28 @@ const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
 func indexTandler(w http.ResponseWriter, r *http.Request) {
-	if loginCheck(w, r) {
-		fmt.Println("RemoteAddr : " + r.RemoteAddr)
+	fmt.Println("RemoteAddr : " + r.RemoteAddr)
+	if loginCheck(w, r) == false {
+		return
+	}
 
-		data, _ := ioutil.ReadFile("./assets/index.html.ahat")
-		str := fmt.Sprintf("%s", data)
+	data, _ := ioutil.ReadFile("assets/index.html.ahat")
+	str := fmt.Sprintf("%s", data)
 
-		fmt.Fprintf(w, str[:strings.Index(str, "#select")])
-		//	fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+9:strings.LastIndex(str, "#select")])
-
-		makeSelect(w)
-
-		fmt.Fprintf(w, str[strings.LastIndex(str, "#select")+8:strings.LastIndex(str, "#content")])
-		//	fmt.Fprintf(w, str[:strings.Index(str, "#content")])
-
-		displayImages(w, r)
-
-		fmt.Fprintf(w, str[strings.LastIndex(str, "#content")+8:])
+	scanner := bufio.NewScanner(strings.NewReader(str))
+	for scanner.Scan() {
+		if strings.HasPrefix(scanner.Text(), "#") {
+			switch scanner.Text() {
+			case "#select":
+				makeSelect(w)
+			case "#content":
+				makeContent(w, r)
+			case "#page":
+				makePage(w, r)
+			}
+		} else {
+			fmt.Fprintf(w, scanner.Text())
+		}
 	}
 }
 
@@ -57,13 +62,20 @@ func apiTandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func displayImages(w http.ResponseWriter, r *http.Request) {
+func makeContent(w http.ResponseWriter, r *http.Request) {
 
-	decodedValue, _ := url.QueryUnescape(r.URL.String())
-	path := imgPath + decodedValue
-	fmt.Println("path : " + path)
+	path := imgPath + r.URL.Path
+	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
+	count, _ := strconv.Atoi(r.URL.Query().Get("c"))
 
-	if decodedValue != "/" && !fileExists(path) {
+	if page == 0 {
+		page = 1
+	}
+	if count == 0 {
+		count = 100
+	}
+
+	if r.URL.Path != "/" && !fileExists(path) {
 		return
 	}
 
@@ -75,7 +87,17 @@ func displayImages(w http.ResponseWriter, r *http.Request) {
 	sort.Sort(FileSort(files))
 	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
 	fmt.Fprintf(w, "<td class='equalDivide'><a href='..'><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
-	fmt.Println("<a href='http://" + r.Host + "" + decodedValue + "..'>")
+	fmt.Println("<a href='http://" + r.Host + "" + r.URL.Path + "..'>")
+
+	if len(files) > ((page - 1) * count) {
+		files = files[(page-1)*count:]
+	}
+	if len(files) > count {
+		files = files[0:count]
+		fmt.Fprintf(w, "<script>var lastPage=false;</script>")
+	} else {
+		fmt.Fprintf(w, "<script>var lastPage=true;</script>")
+	}
 
 	for i, f := range files {
 		if (i+1)%4 == 0 {
@@ -83,7 +105,7 @@ func displayImages(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
-			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+decodedValue+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
+			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+r.URL.Path+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
 			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+path+"/"+f.Name()+"'>")
@@ -93,6 +115,38 @@ func displayImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "</tr>")
+}
+
+func makePage(w http.ResponseWriter, r *http.Request) {
+
+	path := imgPath + r.URL.Path
+	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
+	count, _ := strconv.Atoi(r.URL.Query().Get("c"))
+
+	if page == 0 {
+		page = 1
+	}
+	if count == 0 {
+		count = 100
+	}
+	fmt.Fprintf(w, "<script>var page="+strconv.Itoa(page)+";var count="+strconv.Itoa(count)+";</script>")
+
+	if r.URL.Path != "/" && !fileExists(path) {
+		return
+	}
+
+	files, errf := ioutil.ReadDir(path)
+	if errf != nil {
+		fmt.Println(errf)
+	}
+
+	pageno := (len(files) / count) + 1
+
+	fmt.Fprintf(w, "<select>")
+	for i := 0; i < pageno; i++ {
+		fmt.Fprintf(w, "<option>"+strconv.Itoa(i+1)+"</option>")
+	}
+	fmt.Fprintf(w, "</select>")
 }
 
 func makeSelect(w http.ResponseWriter) {
