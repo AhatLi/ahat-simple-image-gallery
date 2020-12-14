@@ -1,14 +1,17 @@
 var modal = document.getElementById("myModal");
 var btn = document.getElementsByName("myBtn");
 var img = document.getElementById("myImg");
+
 var imgLayer = document.getElementById("modalImage");
 var selectLayer = document.getElementById("modalSelect");
+var configLayer = document.getElementById("modalConfig");
 
 var timer;
 var istrue = false;
 var delay = 1000;
 var isCheckMode = false;
 var checkedCount = 0;
+var imgMode = false;
 
 function thumbClick(id)
 {
@@ -34,11 +37,22 @@ function thumbClick(id)
     modal.style.display = "block";
     imgLayer.style.display = "block";
     selectLayer.style.display = "none";
+    configLayer.style.display = "none";
+    
     img.src = element.name;
     img.name = id;
+    imgMode = true;
   }
 
   console.log('count : ' + checkedCount);
+}
+
+function setting()
+{
+  modal.style.display = "block";
+  imgLayer.style.display = "none";
+  selectLayer.style.display = "none";
+  configLayer.style.display = "block";
 }
 
 function movdImage()
@@ -46,11 +60,13 @@ function movdImage()
   modal.style.display = "block";
   imgLayer.style.display = "none";
   selectLayer.style.display = "block";
+  configLayer.style.display = "none";
 }
 
 window.onclick = function(event) {
   if (event.target == modal) {
     modal.style.display = "none";
+    imgMode = false;
   }
 }
 
@@ -80,7 +96,6 @@ function makeChange(id)
 }
 
 document.addEventListener('touchmove', function(e) {
-  //  e.preventDefault();
     istrue =false;
     clearTimeout(timer);
 }, false);
@@ -177,13 +192,14 @@ function DisableCheckMode()
   div2.style.display = "block";
 }
 
-var element = document.getElementById("myModal");
-dragElement(element);
+dragElement(modal);
 
 function dragElement(elmnt) {
+  if(!imgMode)  
+    return;
   var pos1 = 0, pos3 = 0;
-  element.onmousedown = dragMouseDown;
-	element.onpointerdown = dragMouseDown;
+  modal.onmousedown = dragMouseDown;
+	modal.onpointerdown = dragMouseDown;
 
   function dragMouseDown(e) {
     e = e || window.event;
@@ -203,7 +219,7 @@ function dragElement(elmnt) {
     pos1 = e.touches[0].pageX - pos3;
     pos3 = e.touches[0].pageX; 
 
-    var style = window.getComputedStyle(element);
+    var style = window.getComputedStyle(modal);
     var matrix = new WebKitCSSMatrix(style.transform);
 
     elmnt.style.transform = "translate(" + (matrix.m41 + pos1) + "px)";
@@ -219,9 +235,9 @@ function dragElement(elmnt) {
   }
 
   function closeDragElement() {
-    var style = window.getComputedStyle(element);
+    var style = window.getComputedStyle(modal);
     var matrix = new WebKitCSSMatrix(style.transform);
-    if((matrix.m41) > (element.offsetWidth/3*2))
+    if((matrix.m41) > (modal.offsetWidth/2))
     { 
       var nimg = document.getElementById('img' + (parseInt(img.name.substring(3))-1));
       if(nimg != null)
@@ -230,7 +246,7 @@ function dragElement(elmnt) {
         img.src = nimg.name;
       }
     }
-    else if((matrix.m41) < (element.offsetWidth/3*2*-1))
+    else if((matrix.m41) < (modal.offsetWidth/2*-1))
     {
       var nimg = document.getElementById('img' + (parseInt(img.name.substring(3))+1));
       if(nimg != null)

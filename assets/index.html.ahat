@@ -1,30 +1,42 @@
-<html>
-<head>
+<html><head>
 <title>Ahat Simple Gallary</title>
-
-
 <link href="/assets/style.css" rel="stylesheet">
-</head>
-<body>
+</head><body>
 <div id='myModal' class='modal'>  
 <div id='modalImage' class='modal-content'>
-
 <p><img src='#' style='width: 100%%' id='myImg'></p>  
 </div>
 <div id='modalSelect' class='modal-content'>
 #select
-
 <input type="submit" value="이동" onClick="goPost()"/>
-
 </div>
-</div>
-
-<table class="equalDivide">
-
-#content
-
+<div id='modalConfig' class='modal-content'>
+<form>
+<table style='width: 100%%' class="equalDivide">
+<tr><td>표시개수</td><td>
+<input type="radio" name="imgCount" value="50">50
+<input type="radio" name="imgCount" value="100">100
+<input type="radio" name="imgCount" value="200">200
+<input type="radio" name="imgCount" value="1000">1000
+</td></tr>
+<tr><td>파일정렬</td><td>
+<input type="radio" name="imgSort" value="name">50
+<input type="radio" name="imgSort" value="date">100
+<input type="radio" name="imgSort" value="size">200
+</td>
+<tr>
+<td colspan="2">
+<input type="submit" value="적용">
+</td>
+</tr>
 </table>
+</form>
+</div>  
+</div>
 
+</div><table class="equalDivide">
+#content
+</table>
 <div class="bot-item">
 <div id='bot-check' style="display: none;  ">
 <table style='height: 100%%; width: 100%%' class="equalDivide">
@@ -34,6 +46,9 @@
 </td>
 <td>
 <button onClick="removeSelect()">해제</button>
+</td>
+<td>
+<button onClick="removeSelect()">삭제</button>
 </td>
 </tr>
 </table>
@@ -52,20 +67,10 @@
 <button id="nextPageBtn">다음</button>
 </td>
 <td>
-<select>
-<option>50</option>
-<option>100</option>
-<option>200</option>
-<option>1000</option>
-</select>
+<button onClick="setting()">검색</button>
 </td>
 <td>
-<select>
-<option>이름순</option>
-<option>날짜순</option>
-<option>크기순</option>
-<option>확장자</option>
-</select>
+<button onClick="setting()">설정</button>
 </td>
 </tr>
 </table>
