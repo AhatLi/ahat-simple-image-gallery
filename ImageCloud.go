@@ -43,36 +43,38 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 
 func apiTandler(w http.ResponseWriter, r *http.Request) {
 
-	files := strings.Split(r.PostFormValue("files"), ",")
-	for _, file := range files {
-		err := os.Rename(r.PostFormValue("source")+file, "images"+r.PostFormValue("dest")+"/"+file)
-		if err != nil {
-			fmt.Println("Rename error1 : " + err.Error())
-		}
-		fmt.Println("." + r.PostFormValue("source") + file)
-		fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
-		fmt.Println()
+	if strings.HasSuffix(r.URL.Path, "input") {
+		files := strings.Split(r.PostFormValue("files"), ",")
+		for _, file := range files {
+			err := os.Rename(r.PostFormValue("source")+file, "images"+r.PostFormValue("dest")+"/"+file)
+			if err != nil {
+				fmt.Println("Rename error1 : " + err.Error())
+			}
+			fmt.Println("." + r.PostFormValue("source") + file)
+			fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
+			fmt.Println()
 
-		err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
-		if err != nil {
-			fmt.Println("Rename error2 : " + err.Error())
+			err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
+			if err != nil {
+				fmt.Println("Rename error2 : " + err.Error())
+			}
+			fmt.Println()
 		}
-		fmt.Println()
+	} else if strings.HasSuffix(r.URL.Path, "config") {
+		fmt.Println(r.PostFormValue("imgCount"))
+		fmt.Println(r.PostFormValue("imgSort"))
 	}
-
 }
 
 func makeContent(w http.ResponseWriter, r *http.Request) {
 
 	path := imgPath + r.URL.Path
 	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
-	count, _ := strconv.Atoi(r.URL.Query().Get("c"))
+
+	count, contentSort := getContentData()
 
 	if page == 0 {
 		page = 1
-	}
-	if count == 0 {
-		count = 100
 	}
 
 	if r.URL.Path != "/" && !fileExists(path) {
@@ -82,6 +84,12 @@ func makeContent(w http.ResponseWriter, r *http.Request) {
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
 		fmt.Println(errf)
+	}
+
+	switch contentSort {
+	case "name":
+	case "file":
+	case "size":
 	}
 
 	sort.Sort(FileSort(files))

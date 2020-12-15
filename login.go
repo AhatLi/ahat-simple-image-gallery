@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/securecookie"
-	"gopkg.in/ini.v1"
 )
 
 // cookie handling
@@ -134,26 +133,4 @@ func loginCheck(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 	return true
-}
-
-func getUserData() (string, string) {
-	cfg, err := ini.Load("ImageCloud.conf")
-	if err != nil {
-		return "", ""
-	}
-	confUsername := cfg.Section("account").Key("username").String()
-	confPasswd := cfg.Section("account").Key("passwd").String()
-
-	return confUsername, confPasswd
-}
-
-func getContentData() (int, string) {
-	cfg, err := ini.Load("ImageCloud.conf")
-	if err != nil {
-		return 100, ""
-	}
-	confUsername, _ := cfg.Section("content").Key("count").Int()
-	confPasswd := cfg.Section("content").Key("sort").String()
-
-	return confUsername, confPasswd
 }

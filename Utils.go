@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
+	"gopkg.in/ini.v1"
 )
 
 //FileSort  aaa
@@ -112,4 +113,26 @@ func explorerDirectory(path string) {
 
 func isImage(filename string) bool {
 	return strings.HasSuffix(filename, ".jpg") || strings.HasSuffix(filename, ".png") || strings.HasSuffix(filename, ".gif") || strings.HasSuffix(filename, ".jpeg")
+}
+
+func getUserData() (string, string) {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return "", ""
+	}
+	confUsername := cfg.Section("account").Key("username").String()
+	confPasswd := cfg.Section("account").Key("passwd").String()
+
+	return confUsername, confPasswd
+}
+
+func getContentData() (int, string) {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return 100, ""
+	}
+	count, _ := cfg.Section("content").Key("count").Int()
+	sort := cfg.Section("content").Key("sort").String()
+
+	return count, sort
 }
