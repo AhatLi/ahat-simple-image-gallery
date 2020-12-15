@@ -195,15 +195,13 @@ function DisableCheckMode()
 dragElement(modal);
 
 function dragElement(elmnt) {
-  if(!imgMode)  
-    return;
   var pos1 = 0, pos3 = 0;
   modal.onmousedown = dragMouseDown;
 	modal.onpointerdown = dragMouseDown;
 
   function dragMouseDown(e) {
-    e = e || window.event;
-    e.preventDefault();
+//    e = e || window.event;
+//    e.preventDefault();
     // get the mouse cursor position at startup:
     pos3 = e.clientX;
     pos4 = e.clientY;
@@ -215,6 +213,8 @@ function dragElement(elmnt) {
   }
 
   function elementDrag(e) {
+    if(!imgMode)  
+      return;
 
     pos1 = e.touches[0].pageX - pos3;
     pos3 = e.touches[0].pageX; 

@@ -64,8 +64,10 @@ width: 100%;
 
 select
 {
-font-size: 5em;
+border: solid 0.1em;
+font-size: 3em;
 width: 100%;
+height: 1.75em;
 }
 
 select option
@@ -85,10 +87,18 @@ border: solid 0.2em;
 filter: brightness(30%);
 }
 
+test1
+{
+    border: solid 0.1em;
+    width: 100%;
+    height: 1.75em;
+    font-size: 3em;
+}
+
 button
 {
-border: solid 0.2em;
+border: solid 0.1em;
 width: 100%;
-height: 80%;
+height: 1.75em;
 font-size: 3em;
 }

@@ -8,21 +8,26 @@
 </div>
 <div id='modalSelect' class='modal-content'>
 #select
-<input type="submit" value="이동" onClick="goPost()"/>
+<button onClick="goPost()">이동</button>
 </div>
 <div id='modalConfig' class='modal-content'>
-<form>
+<form>>
 <table style='width: 100%%' class="equalDivide">
 <tr><td>표시개수</td><td>
-<input type="radio" name="imgCount" value="50">50
-<input type="radio" name="imgCount" value="100">100
-<input type="radio" name="imgCount" value="200">200
-<input type="radio" name="imgCount" value="1000">1000
+<select id="imgCount">
+<option value="50">50</option>
+<option value="100">100</option>
+<option value="200">200</option>
+<option value="1000">1000</option>
+</select>
 </td></tr>
 <tr><td>파일정렬</td><td>
-<input type="radio" name="imgSort" value="name">50
-<input type="radio" name="imgSort" value="date">100
-<input type="radio" name="imgSort" value="size">200
+<select id="imgSort">
+<option value="name">이름순</option>
+<option value="date">날짜순</option>
+<option value="size">크기순</option>
+<option>1000</option>
+</select>
 </td>
 <tr>
 <td colspan="2">
