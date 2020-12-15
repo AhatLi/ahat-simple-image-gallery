@@ -24,6 +24,13 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	data, _ := ioutil.ReadFile("assets/index.html.ahat")
 	str := fmt.Sprintf("%s", data)
 
+	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
+	count, contentSort := getContentData()
+
+	if page == 0 {
+		page = 1
+	}
+
 	scanner := bufio.NewScanner(strings.NewReader(str))
 	for scanner.Scan() {
 		if strings.HasPrefix(scanner.Text(), "#") {
@@ -31,9 +38,9 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 			case "#select":
 				makeSelect(w)
 			case "#content":
-				makeContent(w, r)
+				makeContent(w, r, count, page, contentSort)
 			case "#page":
-				makePage(w, r)
+				makePage(w, r, count, page)
 			}
 		} else {
 			fmt.Fprintf(w, scanner.Text())
@@ -44,38 +51,34 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 func apiTandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasSuffix(r.URL.Path, "input") {
-		files := strings.Split(r.PostFormValue("files"), ",")
-		for _, file := range files {
-			err := os.Rename(r.PostFormValue("source")+file, "images"+r.PostFormValue("dest")+"/"+file)
-			if err != nil {
-				fmt.Println("Rename error1 : " + err.Error())
-			}
-			fmt.Println("." + r.PostFormValue("source") + file)
-			fmt.Println("./images" + r.PostFormValue("dest") + "/" + file)
-			fmt.Println()
-
-			err = os.Rename(thumPath+r.PostFormValue("source")+file+".jpg", thumPath+imgPath+r.PostFormValue("dest")+"/"+file+".jpg")
-			if err != nil {
-				fmt.Println("Rename error2 : " + err.Error())
-			}
-			fmt.Println()
-		}
+		fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
 	} else if strings.HasSuffix(r.URL.Path, "config") {
-		fmt.Println(r.PostFormValue("imgCount"))
-		fmt.Println(r.PostFormValue("imgSort"))
+		setContentData(r.PostFormValue("imgCount"), r.PostFormValue("imgSort"))
 	}
 }
 
-func makeContent(w http.ResponseWriter, r *http.Request) {
+func fileMove(files string, source string, dest string) {
+	filesSplit := strings.Split(files, ",")
+	for _, file := range filesSplit {
+		err := os.Rename(source+file, "images"+dest+"/"+file)
+		if err != nil {
+			fmt.Println("Rename error1 : " + err.Error())
+		}
+		fmt.Println("." + source + file)
+		fmt.Println("./images" + dest + "/" + file)
+		fmt.Println()
+
+		err = os.Rename(thumPath+source+file+".jpg", thumPath+imgPath+dest+"/"+file+".jpg")
+		if err != nil {
+			fmt.Println("Rename error2 : " + err.Error())
+		}
+		fmt.Println()
+	}
+}
+
+func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, contentSort string) {
 
 	path := imgPath + r.URL.Path
-	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
-
-	count, contentSort := getContentData()
-
-	if page == 0 {
-		page = 1
-	}
 
 	if r.URL.Path != "/" && !fileExists(path) {
 		return
@@ -97,15 +100,18 @@ func makeContent(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<td class='equalDivide'><a href='..'><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
 	fmt.Println("<a href='http://" + r.Host + "" + r.URL.Path + "..'>")
 
+	fmt.Println(len(files))
 	if len(files) > ((page - 1) * count) {
 		files = files[(page-1)*count:]
 	}
+	fmt.Println(len(files))
 	if len(files) > count {
 		files = files[0:count]
 		fmt.Fprintf(w, "<script>var lastPage=false;</script>")
 	} else {
 		fmt.Fprintf(w, "<script>var lastPage=true;</script>")
 	}
+	fmt.Println(len(files))
 
 	for i, f := range files {
 		if (i+1)%4 == 0 {
@@ -125,18 +131,9 @@ func makeContent(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "</tr>")
 }
 
-func makePage(w http.ResponseWriter, r *http.Request) {
+func makePage(w http.ResponseWriter, r *http.Request, count int, page int) {
 
 	path := imgPath + r.URL.Path
-	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
-	count, _ := strconv.Atoi(r.URL.Query().Get("c"))
-
-	if page == 0 {
-		page = 1
-	}
-	if count == 0 {
-		count = 100
-	}
 	fmt.Fprintf(w, "<script>var page="+strconv.Itoa(page)+";var count="+strconv.Itoa(count)+";</script>")
 
 	if r.URL.Path != "/" && !fileExists(path) {
@@ -193,7 +190,7 @@ func main() {
 	http.HandleFunc("/api/", apiTandler)
 	http.HandleFunc("/", indexTandler)
 
-	err := http.ListenAndServe(":9090", nil)
+	err := http.ListenAndServe(getPort(), nil)
 
 	if err != nil {
 		fmt.Println("ListenAndServe:" + err.Error())

@@ -106,10 +106,9 @@ function revert()
    clearTimeout(timer);
 }
 
-function goPost()
+function postFileMove()
 {
-  var e = document.getElementById("selectDir");
-  var destDir = e.value;
+  var destDir = document.getElementById("selectDir").value;
   if(destDir == '-filemove-')
   {
     return;
@@ -155,6 +154,14 @@ function goPost()
 
   document.body.appendChild(form);
   form.submit();
+
+  location.reload();
+}
+
+function postConfig()
+{
+  configForm = document.getElementById("configForm");
+  configForm.submit();
 
   location.reload();
 }

@@ -134,5 +134,37 @@ func getContentData() (int, string) {
 	count, _ := cfg.Section("content").Key("count").Int()
 	sort := cfg.Section("content").Key("sort").String()
 
+	if count == 0 {
+		count = 100
+	}
+
+	if sort == "" {
+		sort = "name"
+	}
+
 	return count, sort
+}
+
+func setContentData(count string, sort string) {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return
+	}
+
+	cfg.Section("content").Key("count").SetValue(count)
+	cfg.Section("content").Key("sort").SetValue(sort)
+	cfg.SaveTo("ImageCloud.conf")
+}
+
+func getPort() string {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return ":9090"
+	}
+	port := cfg.Section("network").Key("port").String()
+	if port == "" {
+		return ":9090"
+	}
+
+	return ":" + cfg.Section("network").Key("port").String()
 }

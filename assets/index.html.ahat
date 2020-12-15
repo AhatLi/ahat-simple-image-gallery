@@ -8,10 +8,10 @@
 </div>
 <div id='modalSelect' class='modal-content'>
 #select
-<button onClick="goPost()">이동</button>
+<button onClick="postFileMove()">이동</button>
 </div>
 <div id='modalConfig' class='modal-content'>
-<form action="/api/config" method="POST">
+<form id="configForm" action="/api/config" method="POST" target="iframe1">
 <table style='width: 100%%' class="equalDivide">
 <tr><td>표시개수</td><td>
 <select name="imgCount">
@@ -31,7 +31,7 @@
 </td>
 <tr>
 <td colspan="2">
-<input type="submit" value="적용">
+<button onClick="postConfig()">적용</button>
 </td>
 </tr>
 </table>
