@@ -14,12 +14,12 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-//FileSort  aaa
-type FileSort []os.FileInfo
+//FileNameSort  aaa
+type FileNameSort []os.FileInfo
 
-func (a FileSort) Len() int      { return len(a) }
-func (a FileSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a FileSort) Less(i, j int) bool {
+func (a FileNameSort) Len() int      { return len(a) }
+func (a FileNameSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a FileNameSort) Less(i, j int) bool {
 	if a[i].IsDir() && a[j].IsDir() {
 		return a[i].Name() < a[j].Name()
 	} else if a[i].IsDir() {
@@ -28,6 +28,39 @@ func (a FileSort) Less(i, j int) bool {
 		return false
 	}
 	return a[i].Name() < a[j].Name()
+}
+
+//FileDateSort  aaa
+type FileDateSort []os.FileInfo
+
+func (a FileDateSort) Len() int      { return len(a) }
+func (a FileDateSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a FileDateSort) Less(i, j int) bool {
+	if a[i].IsDir() && a[j].IsDir() {
+		return a[i].Name() < a[j].Name()
+	} else if a[i].IsDir() {
+		return true
+	} else if a[j].IsDir() {
+		return false
+	}
+
+	return a[i].ModTime().Unix() < a[j].ModTime().Unix()
+}
+
+//FileSizeSort  aaa
+type FileSizeSort []os.FileInfo
+
+func (a FileSizeSort) Len() int      { return len(a) }
+func (a FileSizeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a FileSizeSort) Less(i, j int) bool {
+	if a[i].IsDir() && a[j].IsDir() {
+		return a[i].Name() < a[j].Name()
+	} else if a[i].IsDir() {
+		return true
+	} else if a[j].IsDir() {
+		return false
+	}
+	return a[i].Size() < a[j].Size()
 }
 
 func imgToBase64(file string) string {

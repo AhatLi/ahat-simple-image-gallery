@@ -10,6 +10,20 @@
 #select
 <button onClick="postFileMove()">이동</button>
 </div>
+
+<div id='modalSearch' class='modal-content'>
+<p>파일 검색</p>
+<form id="searchForm" action="." method="GET">
+<input type='text' name='searchText'/>
+<button onClick="getFileSearch()">검색</button>
+</form>
+</div>
+
+<div id='modalRemove' class='modal-content'>
+<p>파일 삭제</p>
+<button onClick="fileRemove()">삭제</button>
+</div>
+
 <div id='modalConfig' class='modal-content'>
 <form id="configForm" action="/api/config" method="POST" target="iframe1">
 <table style='width: 100%%' class="equalDivide">
@@ -37,6 +51,7 @@
 </table>
 </form>
 </div>  
+
 </div>
 
 </div><table class="equalDivide">
@@ -53,7 +68,7 @@
 <button onClick="removeSelect()">해제</button>
 </td>
 <td>
-<button onClick="removeSelect()">삭제</button>
+<button onClick="openModalFileremove()">삭제</button>
 </td>
 </tr>
 </table>
@@ -72,7 +87,7 @@
 <button id="nextPageBtn">다음</button>
 </td>
 <td>
-<button onClick="setting()">검색</button>
+<button onClick="openModalSearch()">검색</button>
 </td>
 <td>
 <button onClick="setting()">설정</button>

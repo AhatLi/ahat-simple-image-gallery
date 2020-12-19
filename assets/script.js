@@ -5,6 +5,8 @@ var img = document.getElementById("myImg");
 var imgLayer = document.getElementById("modalImage");
 var selectLayer = document.getElementById("modalSelect");
 var configLayer = document.getElementById("modalConfig");
+var searchLayer = document.getElementById("modalSearch");
+var removeLayer = document.getElementById("modalRemove");
 
 var timer;
 var istrue = false;
@@ -12,6 +14,9 @@ var delay = 1000;
 var isCheckMode = false;
 var checkedCount = 0;
 var imgMode = false;
+
+document.getElementsByName("imgCount")[0].value = contentCount;
+document.getElementsByName("imgSort")[0].value = contentSort;
 
 function thumbClick(id)
 {
@@ -49,18 +54,39 @@ function thumbClick(id)
 
 function setting()
 {
+  modalNone();
   modal.style.display = "block";
-  imgLayer.style.display = "none";
-  selectLayer.style.display = "none";
   configLayer.style.display = "block";
+}
+
+function openModalSearch()
+{
+  modalNone();
+  modal.style.display = "block";
+  searchLayer.style.display = "block";
 }
 
 function movdImage()
 {
+  modalNone();
   modal.style.display = "block";
-  imgLayer.style.display = "none";
   selectLayer.style.display = "block";
+}
+
+function openModalFileremove()
+{
+  modalNone();
+  modal.style.display = "block";
+  removeLayer.style.display = "block";
+}
+
+function modalNone()
+{
+  imgLayer.style.display = "none";
+  selectLayer.style.display = "none";
   configLayer.style.display = "none";
+  searchLayer.style.display = "none";
+  removeLayer.style.display = "none";
 }
 
 window.onclick = function(event) {
@@ -68,6 +94,46 @@ window.onclick = function(event) {
     modal.style.display = "none";
     imgMode = false;
   }
+}
+
+function fileRemove()
+{
+  var list = document.getElementsByClassName('checked_img');
+  if(list.length == 0)
+  {
+    return;
+  }
+
+  var name = [];
+  for(var i = 0; i < list.length; i++)
+  {
+    name.push(list[i].name.substring(list[i].name.lastIndexOf('/')+1))
+  }
+
+  removeDir = list[0].name.substring(list[0].name.indexOf('images'), list[0].name.lastIndexOf('/')+1)
+
+  var form = document.createElement("form");
+  form.setAttribute("method", "POST");
+  form.setAttribute("action", "/api/remove");
+  form.setAttribute("target", "iframe1");
+
+  //히든으로 값을 주입시킨다.
+  var hiddenField = document.createElement("input");
+  hiddenField.setAttribute("type", "hidden");
+  hiddenField.setAttribute("name", "files");
+  hiddenField.setAttribute("value", name);
+  form.appendChild(hiddenField);
+
+  hiddenField = document.createElement("input");
+  hiddenField.setAttribute("type", "hidden");
+  hiddenField.setAttribute("name", "path");
+  hiddenField.setAttribute("value", removeDir);
+  form.appendChild(hiddenField);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  location.reload();
 }
 
 function func(id)
@@ -164,6 +230,12 @@ function postConfig()
   configForm.submit();
 
   location.reload();
+}
+
+function getFileSearch()
+{
+  searchForm = document.getElementById("searchForm");
+  searchForm.submit();
 }
 
 function removeSelect()
@@ -285,3 +357,4 @@ if(lastPage)
 
   location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page+1);
 });
+

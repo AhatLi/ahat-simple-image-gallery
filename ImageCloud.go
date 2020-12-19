@@ -25,10 +25,39 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	str := fmt.Sprintf("%s", data)
 
 	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
+	search := r.URL.Query().Get("searchText")
 	count, contentSort := getContentData()
 
 	if page == 0 {
 		page = 1
+	}
+
+	path := imgPath + r.URL.Path
+
+	if r.URL.Path != "/" && !fileExists(path) {
+		return
+	}
+
+	files, errf := ioutil.ReadDir(path)
+	if errf != nil {
+		fmt.Println(errf)
+	}
+
+	if search != "" {
+		files = fileSearch(files, search)
+	}
+
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+
+	switch contentSort {
+	case "name":
+		sort.Sort(FileNameSort(files))
+	case "date":
+		sort.Sort(FileDateSort(files))
+	case "size":
+		sort.Sort(FileSizeSort(files))
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(str))
@@ -36,11 +65,12 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(scanner.Text(), "#") {
 			switch scanner.Text() {
 			case "#select":
+				fmt.Fprintf(w, "<script>var contentCount="+strconv.Itoa(count)+";var contentSort='"+contentSort+"';</script>")
 				makeSelect(w)
 			case "#content":
-				makeContent(w, r, count, page, contentSort)
+				makeContent(w, r, count, page, contentSort, files)
 			case "#page":
-				makePage(w, r, count, page)
+				makePage(w, r, count, page, files)
 			}
 		} else {
 			fmt.Fprintf(w, scanner.Text())
@@ -48,12 +78,44 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func fileSearch(files []os.FileInfo, text string) []os.FileInfo {
+	result := make([]os.FileInfo, 0)
+
+	for _, f := range files {
+		if strings.Contains(f.Name(), text) {
+			result = append(result, f)
+		}
+	}
+
+	return result
+}
+
 func apiTandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasSuffix(r.URL.Path, "input") {
 		fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
+	} else if strings.HasSuffix(r.URL.Path, "remove") {
+		fileRemove(r.PostFormValue("files"), r.PostFormValue("path"))
 	} else if strings.HasSuffix(r.URL.Path, "config") {
 		setContentData(r.PostFormValue("imgCount"), r.PostFormValue("imgSort"))
+	}
+}
+
+func fileRemove(files string, path string) {
+	filesSplit := strings.Split(files, ",")
+	for _, file := range filesSplit {
+
+		err := os.Remove(path + file)
+		if err != nil {
+			fmt.Println("remove error1 : " + err.Error())
+		}
+		fmt.Println("remove " + path + file)
+
+		err = os.Remove(thumPath + path + file + ".jpg")
+		if err != nil {
+			fmt.Println("Rename error2 : " + err.Error())
+		}
+		fmt.Println()
 	}
 }
 
@@ -76,26 +138,8 @@ func fileMove(files string, source string, dest string) {
 	}
 }
 
-func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, contentSort string) {
+func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, contentSort string, files []os.FileInfo) {
 
-	path := imgPath + r.URL.Path
-
-	if r.URL.Path != "/" && !fileExists(path) {
-		return
-	}
-
-	files, errf := ioutil.ReadDir(path)
-	if errf != nil {
-		fmt.Println(errf)
-	}
-
-	switch contentSort {
-	case "name":
-	case "file":
-	case "size":
-	}
-
-	sort.Sort(FileSort(files))
 	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
 	fmt.Fprintf(w, "<td class='equalDivide'><a href='..'><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
 	fmt.Println("<a href='http://" + r.Host + "" + r.URL.Path + "..'>")
@@ -122,7 +166,7 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+r.URL.Path+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+path+"/"+f.Name()+"'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		}
 		fmt.Fprintf(w, "</td>")
@@ -131,19 +175,7 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 	fmt.Fprintf(w, "</tr>")
 }
 
-func makePage(w http.ResponseWriter, r *http.Request, count int, page int) {
-
-	path := imgPath + r.URL.Path
-	fmt.Fprintf(w, "<script>var page="+strconv.Itoa(page)+";var count="+strconv.Itoa(count)+";</script>")
-
-	if r.URL.Path != "/" && !fileExists(path) {
-		return
-	}
-
-	files, errf := ioutil.ReadDir(path)
-	if errf != nil {
-		fmt.Println(errf)
-	}
+func makePage(w http.ResponseWriter, r *http.Request, count int, page int, files []os.FileInfo) {
 
 	pageno := (len(files) / count) + 1
 
