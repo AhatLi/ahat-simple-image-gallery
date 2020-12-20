@@ -151,7 +151,7 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+r.URL.Path+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' name='http://"+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' onClick='thumbClick(this.id)' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' name='http://"+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		}
 		fmt.Fprintf(w, "</td>")
