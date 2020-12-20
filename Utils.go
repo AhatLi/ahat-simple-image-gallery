@@ -7,8 +7,10 @@ import (
 	"image/color"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"gopkg.in/ini.v1"
@@ -231,4 +233,8 @@ func imgFilter(files []os.FileInfo, text string) []os.FileInfo {
 
 func isImage(filename string) bool {
 	return strings.HasSuffix(filename, ".jpg") || strings.HasSuffix(filename, ".png") || strings.HasSuffix(filename, ".gif") || strings.HasSuffix(filename, ".jpeg")
+}
+
+func printLog(r *http.Request) {
+	fmt.Println(time.Now().Format("2006-01-02 15:04:05") + "," + r.RemoteAddr + "," + r.URL.Path)
 }

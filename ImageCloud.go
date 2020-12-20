@@ -16,7 +16,7 @@ const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
 func indexTandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("RemoteAddr : " + r.RemoteAddr)
+	printLog(r)
 	if loginCheck(w, r) == false {
 		return
 	}
@@ -77,7 +77,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiTandler(w http.ResponseWriter, r *http.Request) {
-
+	printLog(r)
 	if strings.HasSuffix(r.URL.Path, "move") {
 		fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
 	} else if strings.HasSuffix(r.URL.Path, "remove") {

@@ -67,6 +67,7 @@ func clearSession(response http.ResponseWriter) {
 }
 
 func loginHandler(response http.ResponseWriter, request *http.Request) {
+	printLog(request)
 	name := request.FormValue("name")
 	pass := request.FormValue("password")
 	redirectTarget := "/main"
@@ -82,6 +83,7 @@ func loginHandler(response http.ResponseWriter, request *http.Request) {
 }
 
 func logoutHandler(response http.ResponseWriter, request *http.Request) {
+	printLog(request)
 	clearSession(response)
 	http.Redirect(response, request, "/", 302)
 }
