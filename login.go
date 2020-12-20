@@ -66,8 +66,6 @@ func clearSession(response http.ResponseWriter) {
 	http.SetCookie(response, cookiepw)
 }
 
-// login handler
-
 func loginHandler(response http.ResponseWriter, request *http.Request) {
 	name := request.FormValue("name")
 	pass := request.FormValue("password")
@@ -82,8 +80,6 @@ func loginHandler(response http.ResponseWriter, request *http.Request) {
 	}
 	http.Redirect(response, request, redirectTarget, 302)
 }
-
-// logout handler
 
 func logoutHandler(response http.ResponseWriter, request *http.Request) {
 	clearSession(response)

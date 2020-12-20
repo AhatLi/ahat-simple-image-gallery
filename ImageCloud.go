@@ -47,9 +47,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 		files = fileSearch(files, search)
 	}
 
-	for _, f := range files {
-		fmt.Println(f.Name())
-	}
+	files = imgFilter(files, search)
 
 	switch contentSort {
 	case "name":
@@ -78,21 +76,9 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fileSearch(files []os.FileInfo, text string) []os.FileInfo {
-	result := make([]os.FileInfo, 0)
-
-	for _, f := range files {
-		if strings.Contains(f.Name(), text) {
-			result = append(result, f)
-		}
-	}
-
-	return result
-}
-
 func apiTandler(w http.ResponseWriter, r *http.Request) {
 
-	if strings.HasSuffix(r.URL.Path, "input") {
+	if strings.HasSuffix(r.URL.Path, "move") {
 		fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
 	} else if strings.HasSuffix(r.URL.Path, "remove") {
 		fileRemove(r.PostFormValue("files"), r.PostFormValue("path"))
@@ -148,7 +134,6 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 	if len(files) > ((page - 1) * count) {
 		files = files[(page-1)*count:]
 	}
-	fmt.Println(len(files))
 	if len(files) > count {
 		files = files[0:count]
 		fmt.Fprintf(w, "<script>var lastPage=false;</script>")
@@ -166,7 +151,7 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+r.URL.Path+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		} else {
-			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='func(this.id)' ontouchend='revert(this.id)' onClick='thumbClick(this.id)' name='http://"+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'>")
+			fmt.Fprintf(w, "<img src='"+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+"' id='img"+strconv.Itoa(i)+"' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' name='http://"+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'>")
 			fmt.Fprintf(w, "<br>"+f.Name())
 		}
 		fmt.Fprintf(w, "</td>")

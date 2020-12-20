@@ -78,8 +78,10 @@ width: 100%;
 
 input 
 {
-font-size: 1.5em;
 border: solid 0.2em;
+width: 100%;
+height: 1.75em;
+font-size: 2em;
 }
 
 .checked_img
@@ -87,17 +89,16 @@ border: solid 0.2em;
 filter: brightness(30%);
 }
 
-test1
-{
-    border: solid 0.1em;
-    width: 100%;
-    height: 1.75em;
-    font-size: 3em;
-}
-
 button
 {
 border: solid 0.1em;
+width: 100%;
+height: 1.75em;
+font-size: 3em;
+}
+
+p
+{
 width: 100%;
 height: 1.75em;
 font-size: 3em;

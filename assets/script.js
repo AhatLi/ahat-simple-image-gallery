@@ -40,9 +40,8 @@ function thumbClick(id)
   else
   {
     modal.style.display = "block";
+    modalNone();
     imgLayer.style.display = "block";
-    selectLayer.style.display = "none";
-    configLayer.style.display = "none";
     
     img.src = element.name;
     img.name = id;
@@ -52,7 +51,7 @@ function thumbClick(id)
   console.log('count : ' + checkedCount);
 }
 
-function setting()
+function openModalSetting()
 {
   modalNone();
   modal.style.display = "block";
@@ -66,14 +65,14 @@ function openModalSearch()
   searchLayer.style.display = "block";
 }
 
-function movdImage()
+function openModalFileMove()
 {
   modalNone();
   modal.style.display = "block";
   selectLayer.style.display = "block";
 }
 
-function openModalFileremove()
+function openModalFileRemove()
 {
   modalNone();
   modal.style.display = "block";
@@ -115,9 +114,8 @@ function fileRemove()
   var form = document.createElement("form");
   form.setAttribute("method", "POST");
   form.setAttribute("action", "/api/remove");
-  form.setAttribute("target", "iframe1");
+  form.setAttribute("target", "tmpiframe");
 
-  //히든으로 값을 주입시킨다.
   var hiddenField = document.createElement("input");
   hiddenField.setAttribute("type", "hidden");
   hiddenField.setAttribute("name", "files");
@@ -136,13 +134,13 @@ function fileRemove()
   location.reload();
 }
 
-function func(id)
+function longTouch(id)
 {
    istrue = true;
-   timer = setTimeout(function(){ makeChange(id);},delay);
+   timer = setTimeout(function(){ imgCheck(id);},delay);
 }
 
-function makeChange(id)
+function imgCheck(id)
 {
   if(timer)
     clearTimeout(timer);
@@ -152,7 +150,6 @@ function makeChange(id)
   
   if(istrue)
   {
-    console.log('makeChange');
     var element = document.getElementById(id);
     element.classList.add("checked_img");
     checkedCount++;
@@ -196,10 +193,9 @@ function postFileMove()
 
   var form = document.createElement("form");
   form.setAttribute("method", "POST");
-  form.setAttribute("action", "/api/input");
-  form.setAttribute("target", "iframe1");
+  form.setAttribute("action", "/api/move");
+  form.setAttribute("target", "tmpiframe");
 
-  //히든으로 값을 주입시킨다.
   var hiddenField = document.createElement("input");
   hiddenField.setAttribute("type", "hidden");
   hiddenField.setAttribute("name", "files");

@@ -14,7 +14,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-//FileNameSort  aaa
+//FileNameSort : img file sort for name
 type FileNameSort []os.FileInfo
 
 func (a FileNameSort) Len() int      { return len(a) }
@@ -30,7 +30,7 @@ func (a FileNameSort) Less(i, j int) bool {
 	return a[i].Name() < a[j].Name()
 }
 
-//FileDateSort  aaa
+//FileDateSort : img file sort for file last mod date
 type FileDateSort []os.FileInfo
 
 func (a FileDateSort) Len() int      { return len(a) }
@@ -47,7 +47,7 @@ func (a FileDateSort) Less(i, j int) bool {
 	return a[i].ModTime().Unix() < a[j].ModTime().Unix()
 }
 
-//FileSizeSort  aaa
+//FileSizeSort : img file sort for file size
 type FileSizeSort []os.FileInfo
 
 func (a FileSizeSort) Len() int      { return len(a) }
@@ -117,7 +117,6 @@ func makeThumbnail(filename string) {
 		},
 	)
 
-	//	imaging.Encode(os.Stdout, thumbnail, imaging.JPEG)
 	err = imaging.Save(thumbnail, thumbname+".jpg")
 
 	if err != nil {
@@ -137,15 +136,11 @@ func explorerDirectory(path string) {
 
 		if f.IsDir() {
 			explorerDirectory(path + "/" + f.Name())
-			fmt.Println(path + "/" + f.Name())
+			//		fmt.Println(path + "/" + f.Name())
 		} else if isImage(f.Name()) {
 			makeThumbnail(path + "/" + f.Name())
 		}
 	}
-}
-
-func isImage(filename string) bool {
-	return strings.HasSuffix(filename, ".jpg") || strings.HasSuffix(filename, ".png") || strings.HasSuffix(filename, ".gif") || strings.HasSuffix(filename, ".jpeg")
 }
 
 func getUserData() (string, string) {
@@ -200,4 +195,40 @@ func getPort() string {
 	}
 
 	return ":" + cfg.Section("network").Key("port").String()
+}
+
+func fileSearch(files []os.FileInfo, text string) []os.FileInfo {
+	result := make([]os.FileInfo, 0)
+
+	for _, f := range files {
+		if strings.Contains(f.Name(), text) {
+			result = append(result, f)
+		}
+	}
+
+	return result
+}
+
+func imgFilter(files []os.FileInfo, text string) []os.FileInfo {
+	result := make([]os.FileInfo, 0)
+
+	if text == "" {
+		for _, f := range files {
+			if f.IsDir() || isImage(f.Name()) {
+				result = append(result, f)
+			}
+		}
+	} else {
+		for _, f := range files {
+			if f.IsDir() || strings.Contains(f.Name(), text) && isImage(f.Name()) {
+				result = append(result, f)
+			}
+		}
+	}
+
+	return result
+}
+
+func isImage(filename string) bool {
+	return strings.HasSuffix(filename, ".jpg") || strings.HasSuffix(filename, ".png") || strings.HasSuffix(filename, ".gif") || strings.HasSuffix(filename, ".jpeg")
 }
