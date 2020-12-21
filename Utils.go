@@ -238,3 +238,40 @@ func isImage(filename string) bool {
 func printLog(r *http.Request) {
 	fmt.Println(time.Now().Format("2006-01-02 15:04:05") + "," + r.RemoteAddr + "," + r.URL.Path)
 }
+
+func fileRemove(files string, path string) {
+	filesSplit := strings.Split(files, ",")
+	for _, file := range filesSplit {
+
+		err := os.Remove(path + file)
+		if err != nil {
+			fmt.Println("remove error1 : " + err.Error())
+		}
+		fmt.Println("remove " + path + file)
+
+		err = os.Remove(thumPath + path + file + ".jpg")
+		if err != nil {
+			fmt.Println("Rename error2 : " + err.Error())
+		}
+		fmt.Println()
+	}
+}
+
+func fileMove(files string, source string, dest string) {
+	filesSplit := strings.Split(files, ",")
+	for _, file := range filesSplit {
+		err := os.Rename(source+file, "images"+dest+"/"+file)
+		if err != nil {
+			fmt.Println("Rename error1 : " + err.Error())
+		}
+		fmt.Println("." + source + file)
+		fmt.Println("./images" + dest + "/" + file)
+		fmt.Println()
+
+		err = os.Rename(thumPath+source+file+".jpg", thumPath+imgPath+dest+"/"+file+".jpg")
+		if err != nil {
+			fmt.Println("Rename error2 : " + err.Error())
+		}
+		fmt.Println()
+	}
+}

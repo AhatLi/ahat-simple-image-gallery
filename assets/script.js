@@ -340,17 +340,25 @@ function dragElement(elmnt) {
   }
 }
 
-document.getElementById("prevPageBtn").addEventListener("click", function() {
-  if(page <= 1)
+function init() {
+  document.getElementById("prevPageBtn").addEventListener("click", function() {
+    if(page <= 1)
+      return;
+  
+    location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page-1);
+  });
+  
+  document.getElementById("nextPageBtn").addEventListener("click", function() {
+  if(lastPage)
     return;
-
-  location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page-1);
-});
-
-document.getElementById("nextPageBtn").addEventListener("click", function() {
-if(lastPage)
-  return;
-
-  location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page+1);
-});
-
+  
+    location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page+1);
+  });
+  
+  var pageSelect = document.getElementById("pageSelect");
+  pageSelect.addEventListener('change', (event) => {
+    var selectValue = pageSelect.options[pageSelect.selectedIndex].value;
+    location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + selectValue;
+  });
+}
+init();

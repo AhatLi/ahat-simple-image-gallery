@@ -15,7 +15,30 @@ const imgPath string = "images/"
 const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
-func indexTandler(w http.ResponseWriter, r *http.Request) {
+func main() {
+	initServer()
+
+	fmt.Println("init complete. server start")
+
+	http.HandleFunc("/main", indexPageHandler)
+	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/logout", logoutHandler)
+
+	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(imgPath))))
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetPath))))
+	http.HandleFunc("/api/", apiHandler)
+	http.HandleFunc("/", indexHandler)
+
+	err := http.ListenAndServe(getPort(), nil)
+
+	if err != nil {
+		fmt.Println("ListenAndServe:" + err.Error())
+	} else {
+		fmt.Println("ListenAndServe Started! -> Port(9090)")
+	}
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	printLog(r)
 	if loginCheck(w, r) == false {
 		return
@@ -76,7 +99,7 @@ func indexTandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func apiTandler(w http.ResponseWriter, r *http.Request) {
+func apiHandler(w http.ResponseWriter, r *http.Request) {
 	printLog(r)
 	if strings.HasSuffix(r.URL.Path, "move") {
 		fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
@@ -87,50 +110,19 @@ func apiTandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fileRemove(files string, path string) {
-	filesSplit := strings.Split(files, ",")
-	for _, file := range filesSplit {
+func initServer() {
+	os.MkdirAll(imgPath, os.ModePerm)
+	os.MkdirAll(thumPath, os.ModePerm)
+	os.MkdirAll(assetPath, os.ModePerm)
 
-		err := os.Remove(path + file)
-		if err != nil {
-			fmt.Println("remove error1 : " + err.Error())
-		}
-		fmt.Println("remove " + path + file)
-
-		err = os.Remove(thumPath + path + file + ".jpg")
-		if err != nil {
-			fmt.Println("Rename error2 : " + err.Error())
-		}
-		fmt.Println()
-	}
-}
-
-func fileMove(files string, source string, dest string) {
-	filesSplit := strings.Split(files, ",")
-	for _, file := range filesSplit {
-		err := os.Rename(source+file, "images"+dest+"/"+file)
-		if err != nil {
-			fmt.Println("Rename error1 : " + err.Error())
-		}
-		fmt.Println("." + source + file)
-		fmt.Println("./images" + dest + "/" + file)
-		fmt.Println()
-
-		err = os.Rename(thumPath+source+file+".jpg", thumPath+imgPath+dest+"/"+file+".jpg")
-		if err != nil {
-			fmt.Println("Rename error2 : " + err.Error())
-		}
-		fmt.Println()
-	}
+	explorerDirectory(imgPath)
 }
 
 func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, contentSort string, files []os.FileInfo) {
 
 	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
 	fmt.Fprintf(w, "<td class='equalDivide'><a href='..'><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
-	fmt.Println("<a href='http://" + r.Host + "" + r.URL.Path + "..'>")
 
-	fmt.Println(len(files))
 	if len(files) > ((page - 1) * count) {
 		files = files[(page-1)*count:]
 	}
@@ -140,7 +132,6 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 	} else {
 		fmt.Fprintf(w, "<script>var lastPage=true;</script>")
 	}
-	fmt.Println(len(files))
 
 	for i, f := range files {
 		if (i+1)%4 == 0 {
@@ -164,9 +155,14 @@ func makePage(w http.ResponseWriter, r *http.Request, count int, page int, files
 
 	pageno := (len(files) / count) + 1
 
-	fmt.Fprintf(w, "<select>")
+	fmt.Fprintf(w, "<script>var page="+strconv.Itoa(page)+";var count="+strconv.Itoa(count)+";</script>")
+	fmt.Fprintf(w, "<select id='pageSelect'>")
 	for i := 0; i < pageno; i++ {
-		fmt.Fprintf(w, "<option>"+strconv.Itoa(i+1)+"</option>")
+		if page == (i + 1) {
+			fmt.Fprintf(w, "<option selected>"+strconv.Itoa(i+1)+"</option>")
+		} else {
+			fmt.Fprintf(w, "<option>"+strconv.Itoa(i+1)+"</option>")
+		}
 	}
 	fmt.Fprintf(w, "</select>")
 }
@@ -183,35 +179,4 @@ func makeSelect(w http.ResponseWriter) {
 		fmt.Fprintf(w, "<option>"+d+"</option>")
 	}
 	fmt.Fprintf(w, "</select>")
-}
-
-func initServer() {
-	os.MkdirAll(imgPath, os.ModePerm)
-	os.MkdirAll(thumPath, os.ModePerm)
-	os.MkdirAll(assetPath, os.ModePerm)
-
-	explorerDirectory(imgPath)
-}
-
-func main() {
-	initServer()
-
-	fmt.Println("init complete. server start")
-
-	http.HandleFunc("/main", indexPageHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/logout", logoutHandler)
-
-	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(imgPath))))
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetPath))))
-	http.HandleFunc("/api/", apiTandler)
-	http.HandleFunc("/", indexTandler)
-
-	err := http.ListenAndServe(getPort(), nil)
-
-	if err != nil {
-		fmt.Println("ListenAndServe:" + err.Error())
-	} else {
-		fmt.Println("ListenAndServe Started! -> Port(9090)")
-	}
 }
