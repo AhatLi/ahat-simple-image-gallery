@@ -103,12 +103,11 @@ function thumbClick(id)
     modalNone();
     imgLayer.style.display = "block";
     
-    img.src = element.name;
-    img.name = id;
+//    console.log(element.baseURI + "images/" + element.title);   나중에...
+    img.src = element.title;
+    img.title = id;
     imgMode = true;
   }
-
-  console.log('count : ' + checkedCount);
 }
 
 function openModalSetting()
@@ -166,10 +165,10 @@ function fileRemove()
   var name = [];
   for(var i = 0; i < list.length; i++)
   {
-    name.push(list[i].name.substring(list[i].name.lastIndexOf('/')+1))
+    name.push(list[i].title.substring(list[i].title.lastIndexOf('/')+1))
   }
 
-  removeDir = list[0].name.substring(list[0].name.indexOf('images'), list[0].name.lastIndexOf('/')+1)
+  removeDir = list[0].title.substring(list[0].title.indexOf('images'), list[0].title.lastIndexOf('/')+1)
 
   var form = document.createElement("form");
   form.setAttribute("method", "POST");
@@ -241,10 +240,10 @@ function postFileMove()
   var name = [];
   for(var i = 0; i < list.length; i++)
   {
-    name.push(list[i].name.substring(list[i].name.lastIndexOf('/')+1))
+    name.push(list[i].title.substring(list[i].title.lastIndexOf('/')+1))
   }
 
-  sourceDir = list[0].name.substring(list[0].name.indexOf('images'), list[0].name.lastIndexOf('/')+1)
+  sourceDir = list[0].title.substring(list[0].title.indexOf('images'), list[0].title.lastIndexOf('/')+1)
 
   var form = document.createElement("form");
   form.setAttribute("method", "POST");
@@ -367,20 +366,20 @@ function dragElement(elmnt) {
     var matrix = new WebKitCSSMatrix(style.transform);
     if((matrix.m41) > (modal.offsetWidth/2))
     { 
-      var nimg = document.getElementById('img' + (parseInt(img.name.substring(3))-1));
+      var nimg = document.getElementById('img' + (parseInt(img.title.substring(3))-1));
       if(nimg != null)
       {
-        img.name = 'img' + (parseInt(img.name.substring(3))-1);
-        img.src = nimg.name;
+        img.title = 'img' + (parseInt(img.title.substring(3))-1);
+        img.src = nimg.title;
       }
     }
     else if((matrix.m41) < (modal.offsetWidth/2*-1))
     {
-      var nimg = document.getElementById('img' + (parseInt(img.name.substring(3))+1));
+      var nimg = document.getElementById('img' + (parseInt(img.title.substring(3))+1));
       if(nimg != null)
       {
-        img.name = 'img' + (parseInt(img.name.substring(3))+1);
-        img.src = nimg.name;
+        img.title = 'img' + (parseInt(img.title.substring(3))+1);
+        img.src = nimg.title;
       }
     }
 

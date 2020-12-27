@@ -43,8 +43,17 @@ background: white;
 
 .equalDivide
 {
-table-layout: fixed;
-width:100%;
+    table-layout: fixed;
+    background-size: cover;
+    width: 100%;
+}
+
+.imgDiv
+{
+    table-layout: fixed;
+    background-size: cover;
+    width: 100%;
+    padding-bottom: 100%;
 }
 
 .equalDivide tr td 
