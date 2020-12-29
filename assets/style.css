@@ -48,6 +48,33 @@ background: white;
     width: 100%;
 }
 
+
+.imgBox
+{
+    table-layout: fixed;
+    width: 10%;
+    float: left;
+    font-size: 1.5em;
+    text-align:center;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+@media ( max-width: 1023px ) {
+    .imgBox
+    {
+        table-layout: fixed;
+        width: 25%;
+        float: left;
+        font-size: 1.5em;
+        text-align:center;
+        overflow: hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+    }
+}
+
 .imgDiv
 {
     table-layout: fixed;
@@ -60,9 +87,6 @@ background: white;
 { 
 width:20%; 
 text-align:center;
-overflow: hidden;
-text-overflow:ellipsis;
-white-space:nowrap;
 font-size: 1.5em;
 }
 

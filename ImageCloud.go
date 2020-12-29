@@ -120,8 +120,8 @@ func initServer() {
 
 func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, contentSort string, files []os.FileInfo) {
 
-	fmt.Fprintf(w, "<td></td><td></td><td></td><td></td></tr><tr>")
-	fmt.Fprintf(w, "<td class='equalDivide'><a href='..'><img src='http://"+r.Host+"/assets/directory.png'></a><br>..</td>")
+	fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"directory.png")+`")' 
+	onClick='location.href=".."'></div>..</div>`)
 
 	if len(files) > ((page - 1) * count) {
 		files = files[(page-1)*count:]
@@ -134,21 +134,15 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 	}
 
 	for i, f := range files {
-		if (i+1)%4 == 0 {
-			fmt.Fprintf(w, "</tr><tr>")
-		}
-		fmt.Fprintf(w, "<td class='equalDivide'>")
 		if f.IsDir() {
-			fmt.Fprintf(w, "<a href=\"http://"+r.Host+"/"+r.URL.Path+"/"+f.Name()+"/\"><img src='http://"+r.Host+"/assets/directory.png'></a>")
-			fmt.Fprintf(w, "<br>"+f.Name())
+			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"directory.png")+`")' 
+			onClick='location.href="http://`+r.Host+"/"+r.URL.Path+"/"+f.Name()+`"'></div>`+f.Name()+"</div>")
 		} else {
-			fmt.Fprintf(w, "<div class='imgDiv' style='background-image: url(\""+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+"\")'  id='img"+strconv.Itoa(i)+"' onClick='thumbClick(this.id)' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' title='http://"+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'  ></div>")
-			fmt.Fprintf(w, ""+f.Name())
+			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+`")'
+			id='img`+strconv.Itoa(i)+`' onClick='thumbClick(this.id)' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' 
+			title='http://`+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'  ></div>"+f.Name()+"</div>")
 		}
-		fmt.Fprintf(w, "</td>")
 	}
-
-	fmt.Fprintf(w, "</tr>")
 }
 
 func makePage(w http.ResponseWriter, r *http.Request, count int, page int, files []os.FileInfo) {
