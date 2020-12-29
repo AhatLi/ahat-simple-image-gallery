@@ -1,5 +1,8 @@
 package main
 
+// 2020-12-29
+// Ahat Simple Gallery ver 0.9
+
 import (
 	"bufio"
 	"encoding/base64"
