@@ -132,20 +132,21 @@ p
     {
         width: 25%;
     }
-    
+
     select
     {
-        height: 1.75em;
-        font-size: 3em;
+        height: 3em;
+        font-size: 2em;
     }
     
     input 
     {
-        font-size: 3em;
+        font-size: 1em;
     }
 
     button
     {
-        font-size: 3em;
+        font-size: 2em;
+        height: 3em;
     }
 }

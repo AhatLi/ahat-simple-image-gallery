@@ -15,6 +15,8 @@ const imgPath string = "images/"
 const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
+var htmlFile string = "assets/index.html.ahat"
+
 func main() {
 	initServer()
 
@@ -44,7 +46,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, _ := ioutil.ReadFile("assets/index.html.ahat")
+	fmt.Println(htmlFile)
+	data, _ := ioutil.ReadFile(htmlFile)
 	str := fmt.Sprintf("%s", data)
 
 	page, _ := strconv.Atoi(r.URL.Query().Get("p"))
@@ -114,6 +117,9 @@ func initServer() {
 	os.MkdirAll(imgPath, os.ModePerm)
 	os.MkdirAll(thumPath, os.ModePerm)
 	os.MkdirAll(assetPath, os.ModePerm)
+
+	htmlFile = getEnvData()
+	fmt.Println(htmlFile)
 
 	explorerDirectory(imgPath)
 }

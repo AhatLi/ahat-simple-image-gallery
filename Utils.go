@@ -156,6 +156,20 @@ func getUserData() (string, string) {
 	return confUsername, confPasswd
 }
 
+func getEnvData() string {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return "assets/index.html.ahat"
+	}
+	html := cfg.Section("envronment").Key("html").String()
+
+	if html == "" {
+		return "assets/index.html.ahat"
+	}
+
+	return html
+}
+
 func getContentData() (int, string) {
 	cfg, err := ini.Load("ImageCloud.conf")
 	if err != nil {
