@@ -103,7 +103,7 @@ function thumbClick(id)
     modalNone();
     imgLayer.style.display = "block";
     
-//    console.log(element.baseURI + "images/" + element.title);   ë‚˜ì¤‘ì—...
+//    console.log(element.baseURI + "images/" + element.title);   ³ªÁß¿¡...
     img.src = element.title;
     img.title = id;
     imgMode = true;

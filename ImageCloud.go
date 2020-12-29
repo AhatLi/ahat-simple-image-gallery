@@ -136,7 +136,7 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 	for i, f := range files {
 		if f.IsDir() {
 			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"directory.png")+`")' 
-			onClick='location.href="http://`+r.Host+"/"+r.URL.Path+"/"+f.Name()+`"'></div>`+f.Name()+"</div>")
+			onClick='location.href="http://`+r.Host+"/"+r.URL.Path+"/"+f.Name()+`/"'></div>`+f.Name()+"</div>")
 		} else {
 			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+`")'
 			id='img`+strconv.Itoa(i)+`' onClick='thumbClick(this.id)' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' 
