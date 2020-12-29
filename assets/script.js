@@ -99,11 +99,9 @@ function thumbClick(id)
   }
   else
   {
-    modal.style.display = "block";
     modalNone();
     imgLayer.style.display = "block";
     
-//    console.log(element.baseURI + "images/" + element.title);   ³ªÁß¿¡...
     img.src = element.title;
     img.title = id;
     imgMode = true;
@@ -113,33 +111,30 @@ function thumbClick(id)
 function openModalSetting()
 {
   modalNone();
-  modal.style.display = "block";
   configLayer.style.display = "block";
 }
 
 function openModalSearch()
 {
   modalNone();
-  modal.style.display = "block";
   searchLayer.style.display = "block";
 }
 
 function openModalFileMove()
 {
   modalNone();
-  modal.style.display = "block";
   selectLayer.style.display = "block";
 }
 
 function openModalFileRemove()
 {
   modalNone();
-  modal.style.display = "block";
   removeLayer.style.display = "block";
 }
 
 function modalNone()
 {
+  modal.style.display = "block";
   imgLayer.style.display = "none";
   selectLayer.style.display = "none";
   configLayer.style.display = "none";

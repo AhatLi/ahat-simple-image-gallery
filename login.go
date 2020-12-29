@@ -8,7 +8,6 @@ import (
 )
 
 // cookie handling
-
 var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
@@ -89,7 +88,6 @@ func logoutHandler(response http.ResponseWriter, request *http.Request) {
 }
 
 // index page
-
 const indexPage = `
 <body style='font-size: 5em;'>
 <link href="/assets/style.css" rel="stylesheet">
