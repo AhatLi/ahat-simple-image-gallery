@@ -15,7 +15,7 @@ Ahat Simple Gallary를 실행시키고
  - 이미지를 좌 우로 드래그하여 이전/다음 이미지 표시
  - 이미지를 선택 후 이미지 경로 이동 기능
  - 이미지를 선택 후 이미지 삭제 기능
- - 페이지 접속 시 로그인을 하여야 접속 간으
+ - 페이지 접속 시 로그인을 하여야 접속 가능
  - 이미지의 이름/크기/날짜별 정렬 기능
 ```
 
@@ -31,8 +31,12 @@ Ahat Simple Gallary를 실행시키고
 사용방법 1. 윈도우 환경
 1) images 파일에 이용한 이미지 파일을 구성한다.
 2) ImageCloud.exe 파일을 실행한다.
-2-1) 로그파일을 남기고 싶을 경우 CMD 창을 열고 바이너리 위치로 이동하여 ` ImageCloud.exe >> ImageCloud.log ` 형식으로 실행한다.
+2-1) 로그파일을 남기고 싶을 경우 CMD 창을 열고 바이너리 위치로 이동해 
+     ` ImageCloud.exe >> ImageCloud.log ` 
+     형식으로 실행한다.
 3) 프로그램이 실행된 후 모바일 브라우저 혹은 브라우저로 접속하여 사용한다.
 ex) http://127.0.0.1:9090/
 ```
 
+<img src="https://github.com/AhatLi/ahat-simple-image-gallery/blob/master/readme/001.png?raw=true"/>
+<img src="https://github.com/AhatLi/ahat-simple-image-gallery/blob/master/readme/002.png?raw=true"/>
