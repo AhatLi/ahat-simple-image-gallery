@@ -167,7 +167,7 @@ function fileRemove()
 
   var form = document.createElement("form");
   form.setAttribute("method", "POST");
-  form.setAttribute("action", "/api/remove");
+  form.setAttribute("action", "/api/delete");
   form.setAttribute("target", "tmpiframe");
 
   var hiddenField = document.createElement("input");

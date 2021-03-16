@@ -117,7 +117,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	printLog(r)
 	if strings.HasSuffix(r.URL.Path, "move") { //파일 이동 동작을 하는 API를 실행한다.
 		fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
-	} else if strings.HasSuffix(r.URL.Path, "remove") { //파일 삭제 동작을 하는 API를 실행한다.
+	} else if strings.HasSuffix(r.URL.Path, "delete") { //파일 삭제 동작을 하는 API를 실행한다.
 		fileRemove(r.PostFormValue("files"), r.PostFormValue("path"))
 	} else if strings.HasSuffix(r.URL.Path, "config") { //설정을 변경했을 경우 해당 설정을 적용하고 파일에 반영한다.
 		setContentData(r.PostFormValue("imgCount"), r.PostFormValue("imgSort"))
