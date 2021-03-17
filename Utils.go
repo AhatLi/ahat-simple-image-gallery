@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"runtime"
 
 	"github.com/disintegration/imaging"
 	"gopkg.in/ini.v1"
@@ -134,6 +135,12 @@ func makeThumbnail(filename string) {
 	}
 }
 
+func preExplorerDirectory(path string) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	explorerDirectory(path)
+}
+
 //폴더를 탐색하여 이미지가 썸네일이 존재하지 않을 경우 썸네일 파일을 생성한다.
 func explorerDirectory(path string) {
 	os.MkdirAll(thumPath+path, os.ModePerm)
@@ -147,7 +154,7 @@ func explorerDirectory(path string) {
 		if f.IsDir() {
 			explorerDirectory(path + "/" + f.Name())
 		} else if isImage(f.Name()) {
-			makeThumbnail(path + "/" + f.Name())
+			go makeThumbnail(path + "/" + f.Name())
 		}
 	}
 }

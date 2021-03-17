@@ -135,7 +135,7 @@ func initServer() {
 	htmlFile = getEnvData()
 
 	//이미지파일을 확인하여 썸네일을 생성하는 동작을 한다.
-	explorerDirectory(imgPath)
+	preExplorerDirectory(imgPath)
 }
 
 // 디렉토리의 파일을 읽어 페이지에 HTML 형식으로 표시한다.
