@@ -9,17 +9,22 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const imgPath string = "images/"
 const thumPath string = "thumbnail/"
 const assetPath string = "assets/"
 
-var htmlFile string = "assets/index.html.ahat"
+var htmlFile string = "assets/html/index.html.ahat"
 
 func main() {
 	//서버 구성 초기화
+	startTime := time.Now()
 	initServer()
+	elapsedTime := time.Since(startTime)
+
+	fmt.Println("실행시간: ", elapsedTime.Seconds())
 
 	fmt.Println("init complete. server start")
 
@@ -46,6 +51,7 @@ func main() {
 	} else {
 		fmt.Println("ListenAndServe Started! -> Port(" + getPort() + ")")
 	}
+
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +106,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(scanner.Text(), "#") {
 			switch scanner.Text() {
 			case "#select":
-				fmt.Fprintf(w, "<script>var contentCount="+strconv.Itoa(count)+";var contentSort='"+contentSort+"';</script>")
+				fmt.Fprintf(w, "<script>const contentCount="+strconv.Itoa(count)+";const contentSort='"+contentSort+"';</script>")
 				makeSelect(w)
 			case "#content":
 				makeContent(w, r, count, page, contentSort, files)
@@ -141,8 +147,8 @@ func initServer() {
 // 디렉토리의 파일을 읽어 페이지에 HTML 형식으로 표시한다.
 func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, contentSort string, files []os.FileInfo) {
 	// 첫번째 DIV로 뒤로 이동하는 동작을 하는 아이콘을 표시해준다.
-	fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"directory.png")+`")' 
-	onClick='location.href=".."'></div>..</div>`)
+	fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"images/directory.png")+`")' 
+	onClick='location.href=".."'></div><div class='imgtitle'>..</div></div>`)
 
 	//현재 페이지번호와 이미지 개수 변수를 이용하여 페이징 기능 동작을 한다.
 	if len(files) > ((page - 1) * count) {
@@ -156,16 +162,22 @@ func makeContent(w http.ResponseWriter, r *http.Request, count int, page int, co
 		fmt.Fprintf(w, "<script>var lastPage=true;</script>")
 	}
 	//files의 요소가 폴더일 경우 폴더로 표시하고 이미지파일일 경우 썸네일을 표시한다.
+	jsonText := "[ "
+	c := 0
 	for i, f := range files {
 		if f.IsDir() {
-			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"directory.png")+`")' 
-			onClick='location.href="http://`+r.Host+"/"+r.URL.Path+"/"+f.Name()+`/"'></div>`+f.Name()+"</div>")
+			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(assetPath+"images/directory.png")+`")' 
+			onClick='location.href="http://`+r.Host+"/"+r.URL.Path+"/"+f.Name()+`/"'></div><div class='imgtitle'>`+f.Name()+"</div></div>")
 		} else {
 			fmt.Fprintf(w, `<div class='imgBox'><div class='imgDiv' style='background-image: url("`+imgToBase64(thumPath+imgPath+r.URL.Path+"/"+f.Name()+".jpg")+`")'
-			id='img`+strconv.Itoa(i)+`' onClick='thumbClick(this.id)' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)' 
-			title='http://`+r.Host+"/"+imgPath+r.URL.Path+"/"+f.Name()+"'  ></div>"+f.Name()+"</div>")
+			' onClick='showGallery(`+strconv.Itoa(c)+`, this.id)' id='img`+strconv.Itoa(i)+`' ontouchstart='longTouch(this.id)' ontouchend='revert(this.id)'>
+			</div><div class='imgtitle'>`+f.Name()+"</div></div>")
+			jsonText += `{title: "` + f.Name() + `", src: "http://` + r.Host + "/" + imgPath + r.URL.Path + "/" + f.Name() + `"},`
+			c++
 		}
 	}
+	jsonText = jsonText[0:len(jsonText)-1] + "];"
+	fmt.Fprintf(w, "<script>const gallery = "+jsonText+"</script>")
 }
 
 //페이지 이동을 위한 select 엘레멘트를 만드는 함수
@@ -174,7 +186,7 @@ func makePage(w http.ResponseWriter, r *http.Request, count int, page int, files
 	pageno := (len(files) / count) + 1
 
 	fmt.Fprintf(w, "<script>var page="+strconv.Itoa(page)+";var count="+strconv.Itoa(count)+";</script>")
-	fmt.Fprintf(w, "<select id='pageSelect'>")
+	fmt.Fprintf(w, "<select class='form-control' style='background-color: #6c757d; color: white;' id='pageSelect'>")
 	for i := 0; i < pageno; i++ {
 		if page == (i + 1) {
 			fmt.Fprintf(w, "<option selected>"+strconv.Itoa(i+1)+"</option>")
@@ -191,9 +203,9 @@ func makeSelect(w http.ResponseWriter) {
 	var dir []string
 	getDirPath("./images", &dir)
 
-	fmt.Fprintf(w, "<select id='selectDir'>")
+	fmt.Fprintf(w, "<select class='form-select' id='selectDir'>")
 
-	fmt.Fprintf(w, "<option>-filemove-</option>")
+	fmt.Fprintf(w, "<option>-Select Directory-</option>")
 	for _, d := range dir {
 		fmt.Fprintf(w, "<option>"+d+"</option>")
 	}

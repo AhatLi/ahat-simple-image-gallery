@@ -12,9 +12,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
-	"time"
 	"runtime"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"gopkg.in/ini.v1"
@@ -115,7 +116,7 @@ func makeThumbnail(filename string) {
 	img, err := imaging.Open(filename)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("makeThumbnail1 err : ", err)
 		return
 	}
 
@@ -130,7 +131,7 @@ func makeThumbnail(filename string) {
 	err = imaging.Save(thumbnail, thumbname+".jpg")
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("makeThumbnail2 err : ", err)
 		return
 	}
 }
@@ -138,11 +139,15 @@ func makeThumbnail(filename string) {
 func preExplorerDirectory(path string) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	explorerDirectory(path)
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	go explorerDirectory(path, wg)
+
+	wg.Wait()
 }
 
 //폴더를 탐색하여 이미지가 썸네일이 존재하지 않을 경우 썸네일 파일을 생성한다.
-func explorerDirectory(path string) {
+func explorerDirectory(path string, wg *sync.WaitGroup) {
 	os.MkdirAll(thumPath+path, os.ModePerm)
 	files, errf := ioutil.ReadDir(path)
 	if errf != nil {
@@ -152,11 +157,15 @@ func explorerDirectory(path string) {
 	for _, f := range files {
 
 		if f.IsDir() {
-			explorerDirectory(path + "/" + f.Name())
+			wg.Add(1)
+			go explorerDirectory(path+"/"+f.Name(), wg)
 		} else if isImage(f.Name()) {
 			go makeThumbnail(path + "/" + f.Name())
 		}
 	}
+
+	fmt.Println("explorerDirectory Done")
+	wg.Done()
 }
 
 //유저 로그인을 위한 설정을 받아온다.
@@ -175,12 +184,12 @@ func getUserData() (string, string) {
 func getEnvData() string {
 	cfg, err := ini.Load("ImageCloud.conf")
 	if err != nil {
-		return "assets/index.html.ahat"
+		return "assets/html/index.html.ahat"
 	}
 	html := cfg.Section("envronment").Key("html").String()
 
 	if html == "" {
-		return "assets/index.html.ahat"
+		return "assets/html/index.html.ahat"
 	}
 
 	return html

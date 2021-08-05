@@ -15,30 +15,7 @@ var isCheckMode = false;
 var checkedCount = 0;
 var imgMode = false;
 
-function init() {
-  document.getElementById("prevPageBtn").addEventListener("click", function() {
-    if(page <= 1)
-      return;
-    
-    if(location.search == "")
-    {
-      location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page-1);
-    }
-    else
-    {
-      var param = setPageParam(location.search, page-1)
-      location.href=location.protocol + "//" + location.host + location.pathname + param;
-    }
-  
-  });
-  
-  document.getElementById("nextPageBtn").addEventListener("click", function() {
-    if(lastPage)
-      return;
-
-  location.href=location.protocol + "//" + location.host + location.pathname + "?p=" + (page+1);
-  });
-  
+function init() {  
   var pageSelect = document.getElementById("pageSelect");
   pageSelect.addEventListener('change', (event) => {
     var selectValue = pageSelect.options[pageSelect.selectedIndex].value;
@@ -384,5 +361,38 @@ function dragElement(elmnt) {
     document.onpointermove = null;
     
     elmnt.style.transform = "translate(" + 0 + "px)";
+  }
+  
+	const index = 1;
+
+  window.showGallery = function(index, id){
+    var element = document.getElementById(id);  
+    if(isCheckMode)
+    {
+      if(element.classList.contains("checked_img"))
+      {
+        element.classList.remove("checked_img");
+        checkedCount--;
+      }
+      else
+      {
+        element.classList.add("checked_img");
+        checkedCount++;
+      }
+      if(checkedCount == 0)
+        DisableCheckMode();
+    }
+    else
+    {
+      const options = {
+        class: "only-this-gallery",
+        index: index+1,
+        animation: ["slide", "fade"],
+        autohide: "all",
+        control: ["page", "theme", "autofit", "fullscreen", "zoom-in", "zoom-out", "close", "download",  "prev", "next"],
+        fit: "contain"
+      };
+      Spotlight.show(gallery, options);
+    }
   }
 }

@@ -89,15 +89,46 @@ func logoutHandler(response http.ResponseWriter, request *http.Request) {
 
 // index page
 const indexPage = `
-<body style='font-size: 5em;'>
-<link href="/assets/style.css" rel="stylesheet">
-<h1>Login</h1>
-<form method="post" action="/login">
-	<input type="text" id="name" name="name" class="loginInput" placeholder="ID"><br>
-	<input type="password" id="password" name="password" class="loginInput" placeholder="PASSWORD"><br><br>
-    <input type="submit" value="Login"/>
-</form>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<link rel="stylesheet" href="assets/fonts/ionicons/css/ionicons.css">
+	<link rel="stylesheet" href="assets/css/bootstrap.css">
+	<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+		<section class="cd-section index7 visible">
+			<div class="cd-content style7">
+				<div class="login-box">
+					<div class="login-form-slider">
+						<div class="login-slide slide">
+							<div class="login-header">
+								<div class="sign-up-txt text-right">
+									ImageServer
+								</div>
+							</div>
+							<form class="padding-40px" method="post" action="/login">
+								<div class="form-group user-name-field">
+									<input type="text" id="name" name="name" class="form-control" placeholder="User name">
+									<div class="field-icon"><i class="ion-person"></i></div>
+								</div>
+								<div class="form-group margin-bottom-30px forgot-password-field">
+									<input type="password" id="password" name="password" class="form-control" placeholder="Password">
+									<div class="field-icon"><i class="ion-locked"></i></div>
+								</div>
+								<div class="form-group sign-in-btn">
+									<input type="submit" class="submit" value="Login">
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 </body>
+</html>
 `
 
 func indexPageHandler(response http.ResponseWriter, request *http.Request) {
