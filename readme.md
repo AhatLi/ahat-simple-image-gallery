@@ -29,7 +29,7 @@ Ahat Simple Gallary를 실행시키고
 
 ```
 사용방법 1. 윈도우 환경
-1) images 파일에 이용한 이미지 파일을 구성한다.
+1) images 파일에 이미지 파일을 넣는다.
 2) ImageCloud.exe 파일을 실행한다.
 2-1) 로그파일을 남기고 싶을 경우 CMD 창을 열고 바이너리 위치로 이동해 
      ` ImageCloud.exe >> ImageCloud.log ` 
@@ -40,3 +40,19 @@ ex) http://127.0.0.1:9090/
 
 <img src="https://github.com/AhatLi/ahat-simple-image-gallery/blob/master/readme/001.png?raw=true"/>
 <img src="https://github.com/AhatLi/ahat-simple-image-gallery/blob/master/readme/002.png?raw=true"/>
+
+
+
+
+
+
+
+
+
+
+### 참고
+이 프로그램을 제작하는데 아래의 프로젝트 코드를 사용하였습니다.
+감사합니다.
+
+https://github.com/dropways/you-login)
+https://github.com/nextapps-de/spotlight
