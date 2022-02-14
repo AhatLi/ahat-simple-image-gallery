@@ -21,7 +21,7 @@ var htmlFile string = "assets/html/index.html.ahat"
 func main() {
 	//서버 구성 초기화
 	startTime := time.Now()
-	initServer()
+	go initServer()
 	elapsedTime := time.Since(startTime)
 
 	fmt.Println("실행시간: ", elapsedTime.Seconds())
@@ -141,7 +141,12 @@ func initServer() {
 	htmlFile = getEnvData()
 
 	//이미지파일을 확인하여 썸네일을 생성하는 동작을 한다.
-	preExplorerDirectory(imgPath)
+	for {
+		preExplorerDirectory(imgPath)
+
+		//time.Sleep(time.Minute * 10)
+		time.Sleep(time.Second * 60)
+	}
 }
 
 // 디렉토리의 파일을 읽어 페이지에 HTML 형식으로 표시한다.

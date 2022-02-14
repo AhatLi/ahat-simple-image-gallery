@@ -13,13 +13,15 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/disintegration/imaging"
 	"gopkg.in/ini.v1"
 )
+
+var fileMap = make(map[string]int)
 
 //FileNameSort : img file sort for name
 type FileNameSort []os.FileInfo
@@ -84,10 +86,7 @@ func imgToBase64(file string) string {
 //파일 존재여부 확인
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return !os.IsNotExist(err)
 }
 
 //폴더 구조를 확인하는 함수
@@ -105,11 +104,55 @@ func getDirPath(path string, dir *[]string) {
 	}
 }
 
+func getFileSize(filename string) int {
+	fi, err := os.Stat(filename)
+	if err != nil {
+		return 0
+	}
+	return int(fi.Size())
+}
+
+func preExplorerDirectory(path string) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	explorerDirectory(path)
+	time.Sleep(time.Millisecond * 10)
+}
+
+//폴더를 탐색하여 이미지가 썸네일이 존재하지 않을 경우 썸네일 파일을 생성한다.
+func explorerDirectory(path string) {
+	os.MkdirAll(thumPath+path, os.ModePerm)
+	files, errf := ioutil.ReadDir(path)
+	if errf != nil {
+		log.Fatal(errf)
+	}
+
+	for _, f := range files {
+		filepath := path + "/" + f.Name()
+
+		if f.IsDir() {
+			explorerDirectory(filepath)
+		} else if isImage(f.Name()) {
+			if _, ok := fileMap[filepath]; !ok {
+				makeThumbnail(filepath, true)
+			} else if getFileSize(filepath) != fileMap[filepath] { //이름만 같은 다른 파일이 들어있을 때 썸네일을 다시 만든다.
+				makeThumbnail(filepath, false)
+			} else {
+				time.Sleep(time.Millisecond * 5)
+			}
+		}
+	}
+
+	time.Sleep(time.Millisecond * 1)
+}
+
 //썸네일을 생성한다. 현재 이미지의 특정색이 완전히 검은색인 경우 썸네일에서 흰색으로 표시되는 문제점이 있는것으로 보임.
-func makeThumbnail(filename string) {
+func makeThumbnail(filename string, filecheck bool) {
 	thumbname := thumPath + filename
 
-	if fileExists(thumbname + ".jpg") {
+	fileMap[filename] = getFileSize(filename)
+
+	if filecheck && fileExists(thumbname+".jpg") {
 		return
 	}
 
@@ -119,6 +162,8 @@ func makeThumbnail(filename string) {
 		fmt.Println("makeThumbnail1 err : ", err)
 		return
 	}
+
+	fmt.Println(filename + " = " + strconv.Itoa(getFileSize(filename)))
 
 	thumbnail := imaging.Thumbnail(img, 80, 80, imaging.Linear)
 	thumbnail = imaging.AdjustFunc(
@@ -134,38 +179,6 @@ func makeThumbnail(filename string) {
 		fmt.Println("makeThumbnail2 err : ", err)
 		return
 	}
-}
-
-func preExplorerDirectory(path string) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-	go explorerDirectory(path, wg)
-
-	wg.Wait()
-}
-
-//폴더를 탐색하여 이미지가 썸네일이 존재하지 않을 경우 썸네일 파일을 생성한다.
-func explorerDirectory(path string, wg *sync.WaitGroup) {
-	os.MkdirAll(thumPath+path, os.ModePerm)
-	files, errf := ioutil.ReadDir(path)
-	if errf != nil {
-		log.Fatal(errf)
-	}
-
-	for _, f := range files {
-
-		if f.IsDir() {
-			wg.Add(1)
-			go explorerDirectory(path+"/"+f.Name(), wg)
-		} else if isImage(f.Name()) {
-			go makeThumbnail(path + "/" + f.Name())
-		}
-	}
-
-	fmt.Println("explorerDirectory Done")
-	wg.Done()
 }
 
 //유저 로그인을 위한 설정을 받아온다.
