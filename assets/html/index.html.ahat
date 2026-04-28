@@ -1,7 +1,103 @@
-<html><head><link rel="stylesheet" href="/assets/css/bootstrap.css"> <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=con, shrink-to-fit=no"><title>Ahat Simple Gallary</title><link href="/assets/css/style.css" rel="stylesheet"></head><body><div id='myModal' class='modal'> <div id='modalImage' class='modal-content'><img src='#' style='width: 100%%' id='myImg'></div><div id='modalSelect' class='modal-content'> <div class="modal-header"> <h5 class="modal-title">File Move</h5> </div> <div class="modal-body">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="/assets/css/bootstrap.css">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+<title>Ahat Simple Gallary</title>
+<link href="/assets/css/style.css" rel="stylesheet">
+</head>
+<body class="gallery-body">
+<div id='myModal' class='modal'>
+<div id='modalImage' class='modal-content modal-image-panel'>
+<img src='#' id='myImg' alt='Selected image'>
+</div>
+<div id='modalSelect' class='modal-content modal-panel'>
+<div class="modal-header">
+<span class="modal-eyebrow">Organize</span>
+<h5 class="modal-title">Move files</h5>
+</div>
+<div class="modal-body">
 #select
-</div> <div class="modal-footer"><button type="button" class="btn btn-secondary" onClick="postFileMove()">Move File</button> </div></div><div id='modalSearch' class='modal-content'> <div class="modal-header"> <h5 class="modal-title">File Search</h5> </div><form id="searchForm" action="." method="GET"> <div class="modal-body"><input type='text' style='font-size: 2em;' name='searchText'/> </div> <div class="modal-footer"> <button type="submit" class="btn btn-secondary">Search</button> </div></form></div><div id='modalRemove' class='modal-content'><p>File Delete</p><button type="button" class="btn btn-secondary" onClick="fileRemove()">Delete</button></div><div id='modalConfig' class='modal-content'><form id="configForm"> <div class="modal-header"> <h5 class="modal-title">Config</h5> </div> <div class="modal-body"><table style='width: 100%%' class="equalDivide"><tr><td>Image view count</td><td><select name="imgCount"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="1000">1000</option></select></td></tr><tr><td>File sort</td><td><select name="imgSort"><option value="name">Name</option><option value="date">Date</option><option value="size">Size</option></select></td></tr><tr><td>Mobile columns</td><td><select name="mobileColumns"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></td></tr></table> </div> <div class="modal-footer"><button type="button" class="btn btn-secondary" onClick="postConfig()">Apply</button> </div></form></div></div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary action-btn primary-action" onClick="postFileMove()">Move File</button>
+</div>
+</div>
+<div id='modalSearch' class='modal-content modal-panel'>
+<div class="modal-header">
+<span class="modal-eyebrow">Find</span>
+<h5 class="modal-title">Search files</h5>
+</div>
+<form id="searchForm" action="." method="GET">
+<div class="modal-body">
+<input type='text' class='search-input' name='searchText' placeholder='Search by file name'>
+</div>
+<div class="modal-footer">
+<button type="submit" class="btn btn-secondary action-btn primary-action">Search</button>
+</div>
+</form>
+</div>
+<div id='modalRemove' class='modal-content modal-panel danger-panel'>
+<div class="modal-header">
+<span class="modal-eyebrow">Remove</span>
+<h5 class="modal-title">Delete selected files</h5>
+</div>
+<div class="modal-body">
+<p class="modal-copy">The selected images and their thumbnails will be removed.</p>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary action-btn danger-action" onClick="fileRemove()">Delete</button>
+</div>
+</div>
+<div id='modalConfig' class='modal-content modal-panel'>
+<form id="configForm">
+<div class="modal-header">
+<span class="modal-eyebrow">Display</span>
+<h5 class="modal-title">Gallery settings</h5>
+</div>
+<div class="modal-body">
+<table class="equalDivide config-table">
+<tr><td>Images per page</td><td><select name="imgCount"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="1000">1000</option></select></td></tr>
+<tr><td>Sort order</td><td><select name="imgSort"><option value="name">Name</option><option value="date">Date</option><option value="size">Size</option></select></td></tr>
+<tr><td>Mobile columns</td><td><select name="mobileColumns"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></td></tr>
+</table>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary action-btn primary-action" onClick="postConfig()">Apply</button>
+</div>
+</form>
+</div>
+</div>
+<main class="gallery-shell">
 #content
-<div class="bot-item"><div id='bot-check' style="display: none;"><table style='height: 100%%; width: 100%%' class="equalDivide"><tr><td><button type="button" class="btn btn-secondary" onClick="openModalFileMove()">Move</button></td><td><button type="button" class="btn btn-secondary" onClick="removeSelect()">Uncheck</button></td><td><button type="button" class="btn btn-secondary" onClick="openModalFileRemove()">Delete</button></td></tr></table></div><div id='bot-noncheck'><table style='height: 100%%; width: 100%%' class="equalDivide"><tr><td>
+</main>
+<div class="bot-item">
+<div id='bot-check' style="display: none;">
+<div class="dock-panel selection-dock">
+<table class="equalDivide dock-table">
+<tr>
+<td><button type="button" class="btn btn-secondary action-btn" onClick="openModalFileMove()">Move</button></td>
+<td><button type="button" class="btn btn-secondary action-btn subtle-action" onClick="removeSelect()">Uncheck</button></td>
+<td><button type="button" class="btn btn-secondary action-btn danger-action" onClick="openModalFileRemove()">Delete</button></td>
+</tr>
+</table>
+</div>
+</div>
+<div id='bot-noncheck'>
+<div class="dock-panel main-dock">
+<table class="equalDivide dock-table">
+<tr>
+<td class="page-slot">
 #page
-</td><td><button type="button" class="btn btn-secondary" onClick="openModalSearch()">Search</button></td><td><button type="button" class="btn btn-secondary" onClick="openModalSetting()">Config</button></td></tr></table></div></div><script src='/assets/js/script.js'></script><script src='/assets/js/spotlight.bundle.js'></script></body></html>
+</td>
+<td><button type="button" class="btn btn-secondary action-btn" onClick="openModalSearch()">Search</button></td>
+<td><button type="button" class="btn btn-secondary action-btn" onClick="openModalSetting()">Config</button></td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<script src='/assets/js/script.js'></script>
+<script src='/assets/js/spotlight.bundle.js'></script>
+</body>
+</html>
