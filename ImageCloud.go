@@ -120,7 +120,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			switch line {
 			case "#select":
 				jsCfg, _ := json.Marshal(cfg)
-				fmt.Fprintf(w, "<script>const contentConfig=%s;document.documentElement.style.setProperty('--mobile-columns', String(contentConfig.MobileColumns));</script>", jsCfg)
+				fmt.Fprintf(w, "<script>const contentConfig=%s;document.documentElement.style.setProperty('--mobile-columns', String(contentConfig.mobileColumns));</script>", jsCfg)
 				makeSelect(w)
 			case "#content":
 				makeContent(w, r, cfg, page, infos)
@@ -138,19 +138,29 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	if !loginCheck(w, r) {
 		return
 	}
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
 	switch {
+	case strings.HasSuffix(r.URL.Path, "/config") && r.Method == http.MethodGet:
+		writeConfigResponse(w, getContentData())
 	case strings.HasSuffix(r.URL.Path, "/move"):
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		err := fileMove(r.PostFormValue("files"), r.PostFormValue("source"), r.PostFormValue("dest"))
 		writeAPIResponse(w, err)
 	case strings.HasSuffix(r.URL.Path, "/delete"):
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		err := fileRemove(r.PostFormValue("files"), r.PostFormValue("path"))
 		writeAPIResponse(w, err)
 	case strings.HasSuffix(r.URL.Path, "/config"):
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		err := setContentData(r.PostFormValue("imgCount"), r.PostFormValue("imgSort"), r.PostFormValue("mobileColumns"))
 		writeAPIResponse(w, err)
 	default:
@@ -160,12 +170,19 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 func writeAPIResponse(w http.ResponseWriter, err error) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, `{"ok":false,"error":%q}`, err.Error())
 		return
 	}
 	io.WriteString(w, `{"ok":true}`)
+}
+
+func writeConfigResponse(w http.ResponseWriter, cfg ContentConfig) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(cfg)
 }
 
 func initServer() {

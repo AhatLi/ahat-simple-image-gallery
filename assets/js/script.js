@@ -14,6 +14,67 @@ var isCheckMode = false;
 var checkedCount = 0;
 var imgMode = false;
 
+async function loadConfig() {
+  try {
+    var response = await fetch("/api/config", {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("failed to load config");
+    }
+
+    var data = await response.json();
+    window.contentConfig = data;
+    return data;
+  } catch (error) {
+    return window.contentConfig || null;
+  }
+}
+
+function ensureSelectValue(select, value) {
+  if (!select || typeof value === "undefined" || value === null) {
+    return;
+  }
+
+  var stringValue = String(value);
+  var hasOption = Array.from(select.options).some(function (option) {
+    return option.value === stringValue;
+  });
+
+  if (!hasOption) {
+    var option = document.createElement("option");
+    option.value = stringValue;
+    option.text = stringValue;
+    select.appendChild(option);
+  }
+
+  select.value = stringValue;
+}
+
+function applyConfigToForm(config) {
+  if (!config) {
+    return;
+  }
+
+  var countSelect = document.getElementsByName("imgCount")[0];
+  var sortSelect = document.getElementsByName("imgSort")[0];
+  var mobileColumnsSelect = document.getElementsByName("mobileColumns")[0];
+
+  ensureSelectValue(countSelect, config.count);
+  ensureSelectValue(sortSelect, config.sort);
+  ensureSelectValue(mobileColumnsSelect, config.mobileColumns);
+}
+
+async function syncConfigForm() {
+  var config = await loadConfig();
+  applyConfigToForm(config);
+}
+
 function init() {
   var pageSelect = document.getElementById("pageSelect");
   if (pageSelect) {
@@ -32,11 +93,7 @@ function init() {
 
   dragElement(modal);
 
-  if (window.contentConfig) {
-    document.getElementsByName("imgCount")[0].value = String(contentConfig.count);
-    document.getElementsByName("imgSort")[0].value = contentConfig.sort;
-    document.getElementsByName("mobileColumns")[0].value = String(contentConfig.mobileColumns);
-  }
+  syncConfigForm();
 }
 init();
 
@@ -74,7 +131,8 @@ function toggleChecked(element) {
   }
 }
 
-function openModalSetting() {
+async function openModalSetting() {
+  await syncConfigForm();
   modalNone();
   configLayer.style.display = "block";
 }
@@ -206,6 +264,11 @@ async function postConfig() {
       imgSort: formData.get("imgSort"),
       mobileColumns: formData.get("mobileColumns")
     });
+    window.contentConfig = {
+      count: Number(formData.get("imgCount")),
+      sort: formData.get("imgSort"),
+      mobileColumns: Number(formData.get("mobileColumns"))
+    };
     window.location.reload();
   } catch (error) {
     alert(error.message);

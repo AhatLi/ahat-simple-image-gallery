@@ -16,7 +16,7 @@ html {
 
 body {
     margin: 0;
-    padding: 0 0 300px;
+    padding: 0 0 calc(220px + env(safe-area-inset-bottom, 0px));
     -webkit-font-smoothing: antialiased;
     font-family: 'gidoleregular';
     font-weight: 400;
@@ -213,6 +213,8 @@ body {
     bottom: 0;
     left: 0;
     width: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: linear-gradient(to top, rgba(241, 244, 250, 0.96), rgba(241, 244, 250, 0));
 }
 
 .modal-content {
@@ -232,11 +234,19 @@ body {
 }
 
 .gallery-grid {
-    display: flow-root;
+    display: block;
+    overflow: hidden;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+
+.gallery-grid::after {
+    content: "";
+    display: block;
+    clear: both;
 }
 
 .imgBox {
-    width: calc(100% / var(--desktop-columns));
+    width: calc(100% / var(--desktop-columns, 10));
     float: left;
     position: relative;
 }
@@ -319,6 +329,6 @@ p {
     }
 
     .imgBox {
-        width: calc(100% / var(--mobile-columns));
+        width: calc(100% / var(--mobile-columns, 4));
     }
 }
