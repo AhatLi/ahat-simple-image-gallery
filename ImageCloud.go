@@ -17,13 +17,14 @@ import (
 	"time"
 )
 
-const imgPath string = "images"
-const thumPath string = "thumbnail"
+var imgPath string = "images"
+var thumPath string = "thumbnail"
 const assetPath string = "assets"
 
 var htmlFile string = "assets/html/index.html.ahat"
 
 func main() {
+	loadPathConfig()
 	startTime := time.Now()
 	go initServer()
 	elapsedTime := time.Since(startTime)

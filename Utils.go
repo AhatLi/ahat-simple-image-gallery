@@ -321,6 +321,23 @@ func getPort() string {
 	return ":" + port
 }
 
+func loadPathConfig() {
+	cfg, err := ini.Load("ImageCloud.conf")
+	if err != nil {
+		return
+	}
+
+	images := strings.TrimSpace(cfg.Section("path").Key("images").String())
+	if images != "" {
+		imgPath = images
+	}
+
+	thumbnail := strings.TrimSpace(cfg.Section("path").Key("thumbnail").String())
+	if thumbnail != "" {
+		thumPath = thumbnail
+	}
+}
+
 func imgFilter(files []os.FileInfo, text string) []os.FileInfo {
 	result := make([]os.FileInfo, 0, len(files))
 	query := strings.ToLower(strings.TrimSpace(text))
