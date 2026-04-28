@@ -1,20 +1,15 @@
 package main
 
-// 2020-12-29
-// Ahat Simple Gallery ver 0.9
-
 import (
-	"bufio"
-	"encoding/base64"
 	"fmt"
 	"image/color"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/disintegration/imaging"
@@ -22,9 +17,27 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-var fileMap = make(map[string]int)
+var (
+	fileMap   = make(map[string]int64)
+	fileMapMu sync.RWMutex
+)
 
-// FileNameSort : img file sort for name
+type movedFile struct {
+	oldImagePath string
+	newImagePath string
+	oldThumbPath string
+	newThumbPath string
+	thumbMoved   bool
+	size         int64
+	hadSize      bool
+}
+
+type ContentConfig struct {
+	Count         int    `json:"count"`
+	Sort          string `json:"sort"`
+	MobileColumns int    `json:"mobileColumns"`
+}
+
 type FileNameSort []os.FileInfo
 
 func (a FileNameSort) Len() int      { return len(a) }
@@ -40,7 +53,6 @@ func (a FileNameSort) Less(i, j int) bool {
 	return a[i].Name() < a[j].Name()
 }
 
-// FileDateSort : img file sort for file last mod date
 type FileDateSort []os.FileInfo
 
 func (a FileDateSort) Len() int      { return len(a) }
@@ -53,11 +65,9 @@ func (a FileDateSort) Less(i, j int) bool {
 	} else if a[j].IsDir() {
 		return false
 	}
-
 	return a[i].ModTime().Unix() < a[j].ModTime().Unix()
 }
 
-// FileSizeSort : img file sort for file size
 type FileSizeSort []os.FileInfo
 
 func (a FileSizeSort) Len() int      { return len(a) }
@@ -73,267 +83,469 @@ func (a FileSizeSort) Less(i, j int) bool {
 	return a[i].Size() < a[j].Size()
 }
 
-// 이미지를 base64 텍스트로 변환한다.
-func imgToBase64(file string) string {
-	f, _ := os.Open(file)
-	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
-	encoded := base64.StdEncoding.EncodeToString(content)
-	f.Close()
-
-	return "data:image/png;base64," + encoded
-}
-
-// 파일 존재여부 확인
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return !os.IsNotExist(err)
 }
 
-// 폴더 구조를 확인하는 함수
-func getDirPath(path string, dir *[]string) {
-	files, errf := ioutil.ReadDir(path)
-	if errf != nil {
-		log.Fatal(errf)
+func getDirPath(base string, dir *[]string) {
+	entries, err := os.ReadDir(base)
+	if err != nil {
+		fmt.Println("getDirPath error:", err)
+		return
 	}
 
-	for _, f := range files {
-		if f.IsDir() {
-			*dir = append(*dir, path[8:]+"/"+f.Name())
-			getDirPath(path+"/"+f.Name(), dir)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
 		}
+
+		fullPath := filepath.Join(base, entry.Name())
+		rel, relErr := filepath.Rel(imgPath, fullPath)
+		if relErr != nil {
+			fmt.Println("getDirPath rel error:", relErr)
+			continue
+		}
+
+		normalized := "/" + filepath.ToSlash(rel)
+		*dir = append(*dir, normalized)
+		getDirPath(fullPath, dir)
 	}
 }
 
-func getFileSize(filename string) int {
+func getFileSize(filename string) int64 {
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return 0
 	}
-	return int(fi.Size())
+	return fi.Size()
 }
 
-func preExplorerDirectory(path string) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+func thumbnailDirectory(imageDir string) (string, error) {
+	rel, err := filepath.Rel(imgPath, imageDir)
+	if err != nil {
+		return "", err
+	}
+	if rel == "." {
+		rel = ""
+	}
+	return safeJoinUnderBase(thumPath, filepath.ToSlash(rel))
+}
 
-	explorerDirectory(path)
+func thumbnailPath(imagePath string) (string, error) {
+	rel, err := filepath.Rel(imgPath, imagePath)
+	if err != nil {
+		return "", err
+	}
+	thumbBase, err := safeJoinUnderBase(thumPath, filepath.ToSlash(rel))
+	if err != nil {
+		return "", err
+	}
+	return thumbBase + ".jpg", nil
+}
+
+func preExplorerDirectory(root string) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	explorerDirectory(root)
 	time.Sleep(time.Millisecond * 10)
 }
 
-// 폴더를 탐색하여 이미지가 썸네일이 존재하지 않을 경우 썸네일 파일을 생성한다.
-func explorerDirectory(path string) {
-	os.MkdirAll(thumPath+path, os.ModePerm)
-	files, errf := ioutil.ReadDir(path)
-	if errf != nil {
-		log.Fatal(errf)
+func explorerDirectory(root string) {
+	targetDir, err := thumbnailDirectory(root)
+	if err != nil {
+		fmt.Println("thumbnailDirectory error:", err)
+		return
+	}
+	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+		fmt.Println("mkdir thumbnail error:", err)
+		return
 	}
 
-	for _, f := range files {
-		filepath := path + "/" + f.Name()
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		fmt.Println("explorerDirectory error:", err)
+		return
+	}
 
-		if f.IsDir() {
-			explorerDirectory(filepath)
-		} else if isImage(f.Name()) {
-			if _, ok := fileMap[filepath]; !ok {
-				makeThumbnail(filepath, true)
-			} else if getFileSize(filepath) != fileMap[filepath] { //이름만 같은 다른 파일이 들어있을 때 썸네일을 다시 만든다.
-				makeThumbnail(filepath, false)
-			} else {
-				time.Sleep(time.Millisecond * 5)
-			}
+	for _, entry := range entries {
+		fullPath := filepath.Join(root, entry.Name())
+		if entry.IsDir() {
+			explorerDirectory(fullPath)
+			continue
+		}
+		if !isImage(entry.Name()) {
+			continue
+		}
+
+		size := getFileSize(fullPath)
+		if shouldMakeThumbnail(fullPath, size) {
+			makeThumbnail(fullPath, size)
+		} else {
+			time.Sleep(time.Millisecond * 5)
 		}
 	}
-
-	time.Sleep(time.Millisecond * 1)
 }
 
-// 썸네일을 생성한다. 현재 이미지의 특정색이 완전히 검은색인 경우 썸네일에서 흰색으로 표시되는 문제점이 있는것으로 보임.
-func makeThumbnail(filename string, filecheck bool) {
-	thumbname := thumPath + filename
+func shouldMakeThumbnail(filename string, size int64) bool {
+	thumbname, err := thumbnailPath(filename)
+	if err != nil {
+		fmt.Println("thumbnailPath error:", err)
+		return false
+	}
 
-	fileMap[filename] = getFileSize(filename)
+	fileMapMu.RLock()
+	previous, ok := fileMap[filename]
+	fileMapMu.RUnlock()
 
-	if filecheck && fileExists(thumbname+".jpg") {
+	if !ok {
+		return !fileExists(thumbname)
+	}
+	if previous != size {
+		return true
+	}
+	return !fileExists(thumbname)
+}
+
+func makeThumbnail(filename string, size int64) {
+	thumbname, err := thumbnailPath(filename)
+	if err != nil {
+		fmt.Println("thumbnailPath error:", err)
 		return
 	}
+
+	fileMapMu.Lock()
+	fileMap[filename] = size
+	fileMapMu.Unlock()
 
 	img, err := imaging.Open(filename)
-
 	if err != nil {
-		fmt.Println("makeThumbnail1 err : ", err)
+		fmt.Println("makeThumbnail open error:", err)
 		return
 	}
 
-	fmt.Println(filename + " = " + strconv.Itoa(getFileSize(filename)))
-
 	thumbnail := imaging.Thumbnail(img, 80, 80, imaging.Linear)
-	thumbnail = imaging.AdjustFunc(
-		thumbnail,
-		func(c color.NRGBA) color.NRGBA {
-			return color.NRGBA{c.R + uint8(255), c.G + uint8(255), c.B + uint8(255), uint8(255)}
-		},
-	)
+	thumbnail = imaging.AdjustFunc(thumbnail, func(c color.NRGBA) color.NRGBA {
+		return color.NRGBA{R: c.R, G: c.G, B: c.B, A: 255}
+	})
 
-	err = imaging.Save(thumbnail, thumbname+".jpg")
-
-	if err != nil {
-		fmt.Println("makeThumbnail2 err : ", err)
+	if err := os.MkdirAll(filepath.Dir(thumbname), os.ModePerm); err != nil {
+		fmt.Println("makeThumbnail mkdir error:", err)
 		return
+	}
+	if err := imaging.Save(thumbnail, thumbname); err != nil {
+		fmt.Println("makeThumbnail save error:", err)
 	}
 }
 
-// 유저 로그인을 위한 설정을 받아온다.
 func getUserData() (string, string) {
 	cfg, err := ini.Load("ImageCloud.conf")
 	if err != nil {
 		return "", ""
 	}
-	confUsername := cfg.Section("account").Key("username").String()
-	confPasswd := cfg.Section("account").Key("passwd").String()
-
-	return confUsername, confPasswd
+	return cfg.Section("account").Key("username").String(), cfg.Section("account").Key("passwd").String()
 }
 
-// 환경 관련 설정을 받아온다.
 func getEnvData() string {
 	cfg, err := ini.Load("ImageCloud.conf")
 	if err != nil {
-		return "assets/html/index.html.ahat"
+		return filepath.ToSlash(filepath.Join(assetPath, "html", "index.html.ahat"))
 	}
+
 	html := cfg.Section("envronment").Key("html").String()
-
 	if html == "" {
-		return "assets/html/index.html.ahat"
+		return filepath.ToSlash(filepath.Join(assetPath, "html", "index.html.ahat"))
 	}
-
 	return html
 }
 
-// 이미지 표시를 위한 설저응ㄹ 받아온다.
-func getContentData() (int, string) {
+func getContentData() ContentConfig {
 	cfg, err := ini.Load("ImageCloud.conf")
 	if err != nil {
-		return 100, ""
+		return ContentConfig{Count: 100, Sort: "name", MobileColumns: 4}
 	}
-	count, _ := cfg.Section("content").Key("count").Int()
-	sort := cfg.Section("content").Key("sort").String()
 
-	if count == 0 {
+	count, _ := cfg.Section("content").Key("count").Int()
+	if count <= 0 {
 		count = 100
 	}
 
-	if sort == "" {
-		sort = "name"
+	sortValue := cfg.Section("content").Key("sort").String()
+	if sortValue != "name" && sortValue != "date" && sortValue != "size" {
+		sortValue = "name"
 	}
 
-	return count, sort
+	mobileColumns, _ := cfg.Section("content").Key("mobile_columns").Int()
+	if mobileColumns < 2 || mobileColumns > 6 {
+		mobileColumns = 4
+	}
+
+	return ContentConfig{Count: count, Sort: sortValue, MobileColumns: mobileColumns}
 }
 
-// 클라이언트가 설정을 변경하였을 경우 해당 설정을 파일에 반영한다.
-func setContentData(count string, sort string) {
-	cfg, err := ini.Load("ImageCloud.conf")
+func setContentData(count string, sortValue string, mobileColumns string) error {
+	cfg, err := ini.LooseLoad("ImageCloud.conf")
 	if err != nil {
-		return
+		return err
 	}
 
-	cfg.Section("content").Key("count").SetValue(count)
-	cfg.Section("content").Key("sort").SetValue(sort)
-	cfg.SaveTo("ImageCloud.conf")
+	parsedCount, err := strconv.Atoi(count)
+	if err != nil || parsedCount <= 0 {
+		return fmt.Errorf("invalid image count")
+	}
+	if sortValue != "name" && sortValue != "date" && sortValue != "size" {
+		return fmt.Errorf("invalid sort option")
+	}
+	parsedMobileColumns, err := strconv.Atoi(mobileColumns)
+	if err != nil || parsedMobileColumns < 2 || parsedMobileColumns > 6 {
+		return fmt.Errorf("invalid mobile column count")
+	}
+
+	section := cfg.Section("content")
+	section.Key("count").SetValue(strconv.Itoa(parsedCount))
+	section.Key("sort").SetValue(sortValue)
+	section.Key("mobile_columns").SetValue(strconv.Itoa(parsedMobileColumns))
+
+	return cfg.SaveTo("ImageCloud.conf")
 }
 
-// 설정파일에서 포트번호를 받아온다. 기본 포트주소는 9090
 func getPort() string {
 	cfg, err := ini.Load("ImageCloud.conf")
 	if err != nil {
 		return ":9090"
 	}
-	port := cfg.Section("network").Key("port").String()
+
+	port := strings.TrimSpace(cfg.Section("network").Key("port").String())
 	if port == "" {
 		return ":9090"
 	}
-
-	return ":" + cfg.Section("network").Key("port").String()
+	return ":" + port
 }
 
-// 파일을 검색했을 경우 해당 텍스트로 파일을 필터링한다. 추후 와일드카드 등 추가 예정
-func fileSearch(files []os.FileInfo, text string) []os.FileInfo {
-	result := make([]os.FileInfo, 0)
+func imgFilter(files []os.FileInfo, text string) []os.FileInfo {
+	result := make([]os.FileInfo, 0, len(files))
+	query := strings.ToLower(strings.TrimSpace(text))
 
 	for _, f := range files {
-		if strings.Contains(f.Name(), text) {
-			result = append(result, f)
+		if !f.IsDir() && !isImage(f.Name()) {
+			continue
 		}
+		if query != "" && !strings.Contains(strings.ToLower(f.Name()), query) {
+			continue
+		}
+		result = append(result, f)
 	}
 
 	return result
 }
 
-// 이미지 파일만을 표시하기 위해서 필터링을 하는 동작
-func imgFilter(files []os.FileInfo, text string) []os.FileInfo {
-	result := make([]os.FileInfo, 0)
-
-	if text == "" {
-		for _, f := range files {
-			if f.IsDir() || isImage(f.Name()) {
-				result = append(result, f)
-			}
-		}
-	} else {
-		for _, f := range files {
-			if f.IsDir() || strings.Contains(f.Name(), text) && isImage(f.Name()) {
-				result = append(result, f)
-			}
-		}
-	}
-
-	return result
-}
-
-// 현재는 다섯가지 파일 확장자만을 지원한다.
 func isImage(filename string) bool {
-	return strings.HasSuffix(filename, ".jpg") || strings.HasSuffix(filename, ".png") || strings.HasSuffix(filename, ".gif") || strings.HasSuffix(filename, ".jpeg") || strings.HasSuffix(filename, ".webp")
+	lower := strings.ToLower(filename)
+	return strings.HasSuffix(lower, ".jpg") || strings.HasSuffix(lower, ".png") || strings.HasSuffix(lower, ".gif") || strings.HasSuffix(lower, ".jpeg") || strings.HasSuffix(lower, ".webp")
 }
 
-// 엑세스 로그를 출력하는 함수
+func isThumbnailFile(filename string) bool {
+	return strings.HasSuffix(strings.ToLower(filename), ".jpg")
+}
+
 func printLog(r *http.Request) {
-	fmt.Println(time.Now().Format("2006-01-02 15:04:05") + "," + r.RemoteAddr + "," + r.URL.Path)
+	fmt.Println(time.Now().Format("2006-01-02 15:04:05") + "," + r.RemoteAddr + "," + r.Method + "," + r.URL.Path)
 }
 
-// 파일 삭제 동작을 하는 함수
-func fileRemove(files string, path string) {
-	filesSplit := strings.Split(files, ",")
-	for _, file := range filesSplit {
-
-		err := os.Remove(path + file)
-		if err != nil {
-			fmt.Println("remove error1 : " + err.Error())
-		}
-		fmt.Println("remove " + path + file)
-
-		err = os.Remove(thumPath + path + file + ".jpg")
-		if err != nil {
-			fmt.Println("Rename error2 : " + err.Error())
-		}
-		fmt.Println()
+func fileRemove(files string, dir string) error {
+	sourceDir, err := safeImageSubdir(dir)
+	if err != nil {
+		return err
 	}
+
+	names, err := parseFileList(files)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		imagePath := filepath.Join(sourceDir, name)
+		if err := os.Remove(imagePath); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		thumbPath, err := thumbnailPath(imagePath)
+		if err != nil {
+			return err
+		}
+		if err := os.Remove(thumbPath); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		fileMapMu.Lock()
+		delete(fileMap, imagePath)
+		fileMapMu.Unlock()
+	}
+
+	return nil
 }
 
-// 파일 이동 동작을 하는 함수
-func fileMove(files string, source string, dest string) {
-	filesSplit := strings.Split(files, ",")
-	for _, file := range filesSplit {
-		err := os.Rename(source+file, "images"+dest+"/"+file)
-		if err != nil {
-			fmt.Println("Rename error1 : " + err.Error())
-		}
-		fmt.Println("." + source + file)
-		fmt.Println("./images" + dest + "/" + file)
-		fmt.Println()
-
-		err = os.Rename(thumPath+source+file+".jpg", thumPath+imgPath+dest+"/"+file+".jpg")
-		if err != nil {
-			fmt.Println("Rename error2 : " + err.Error())
-		}
-		fmt.Println()
+func fileMove(files string, source string, dest string) error {
+	sourceDir, err := safeImageSubdir(source)
+	if err != nil {
+		return err
 	}
+	destDir, err := safeImageSubdir(dest)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
+		return err
+	}
+	destThumbDir, err := thumbnailDirectory(destDir)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(destThumbDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	names, err := parseFileList(files)
+	if err != nil {
+		return err
+	}
+
+	moves := make([]movedFile, 0, len(names))
+
+	for _, name := range names {
+		oldImagePath := filepath.Join(sourceDir, name)
+		newImagePath := filepath.Join(destDir, name)
+		if err := os.Rename(oldImagePath, newImagePath); err != nil {
+			if rollbackErr := rollbackMovedFiles(moves); rollbackErr != nil {
+				return fmt.Errorf("%v (rollback failed: %w)", err, rollbackErr)
+			}
+			return err
+		}
+
+		oldThumbPath, err := thumbnailPath(oldImagePath)
+		if err != nil {
+			_ = os.Rename(newImagePath, oldImagePath)
+			if rollbackErr := rollbackMovedFiles(moves); rollbackErr != nil {
+				return fmt.Errorf("%v (rollback failed: %w)", err, rollbackErr)
+			}
+			return err
+		}
+		newThumbPath, err := thumbnailPath(newImagePath)
+		if err != nil {
+			_ = os.Rename(newImagePath, oldImagePath)
+			if rollbackErr := rollbackMovedFiles(moves); rollbackErr != nil {
+				return fmt.Errorf("%v (rollback failed: %w)", err, rollbackErr)
+			}
+			return err
+		}
+		if err := os.MkdirAll(filepath.Dir(newThumbPath), os.ModePerm); err != nil {
+			_ = os.Rename(newImagePath, oldImagePath)
+			if rollbackErr := rollbackMovedFiles(moves); rollbackErr != nil {
+				return fmt.Errorf("%v (rollback failed: %w)", err, rollbackErr)
+			}
+			return err
+		}
+		thumbMoved := false
+		if err := os.Rename(oldThumbPath, newThumbPath); err != nil && !os.IsNotExist(err) {
+			_ = os.Rename(newImagePath, oldImagePath)
+			if rollbackErr := rollbackMovedFiles(moves); rollbackErr != nil {
+				return fmt.Errorf("%v (rollback failed: %w)", err, rollbackErr)
+			}
+			return err
+		} else if err == nil {
+			thumbMoved = true
+		}
+
+		move := movedFile{
+			oldImagePath: oldImagePath,
+			newImagePath: newImagePath,
+			oldThumbPath: oldThumbPath,
+			newThumbPath: newThumbPath,
+			thumbMoved:   thumbMoved,
+		}
+
+		fileMapMu.Lock()
+		size, ok := fileMap[oldImagePath]
+		if ok {
+			delete(fileMap, oldImagePath)
+			fileMap[newImagePath] = size
+			move.size = size
+			move.hadSize = true
+		}
+		fileMapMu.Unlock()
+
+		moves = append(moves, move)
+	}
+
+	return nil
+}
+
+func rollbackMovedFiles(moves []movedFile) error {
+	for i := len(moves) - 1; i >= 0; i-- {
+		move := moves[i]
+
+		if err := os.Rename(move.newImagePath, move.oldImagePath); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		if move.thumbMoved {
+			if err := os.MkdirAll(filepath.Dir(move.oldThumbPath), os.ModePerm); err != nil {
+				return err
+			}
+			if err := os.Rename(move.newThumbPath, move.oldThumbPath); err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+
+		fileMapMu.Lock()
+		delete(fileMap, move.newImagePath)
+		if move.hadSize {
+			fileMap[move.oldImagePath] = move.size
+		}
+		fileMapMu.Unlock()
+	}
+
+	return nil
+}
+
+func parseFileList(files string) ([]string, error) {
+	raw := strings.Split(files, ",")
+	names := make([]string, 0, len(raw))
+
+	for _, file := range raw {
+		name := strings.TrimSpace(file)
+		if name == "" {
+			continue
+		}
+		if filepath.Base(name) != name || strings.Contains(name, "/") || strings.Contains(name, `\`) {
+			return nil, fmt.Errorf("invalid file name")
+		}
+		names = append(names, name)
+	}
+
+	if len(names) == 0 {
+		return nil, fmt.Errorf("no files selected")
+	}
+	return names, nil
+}
+
+func safeImageSubdir(dir string) (string, error) {
+	cleaned := strings.TrimSpace(dir)
+	cleaned = strings.TrimPrefix(cleaned, "/")
+	cleaned = filepath.ToSlash(cleaned)
+	cleaned = strings.TrimSuffix(cleaned, "/")
+	return safeJoinUnderBase(imgPath, cleaned)
+}
+
+func safeJoinUnderBase(base string, rel string) (string, error) {
+	baseClean := filepath.Clean(base)
+	candidate := filepath.Clean(filepath.Join(baseClean, filepath.FromSlash(rel)))
+
+	if candidate == baseClean {
+		return candidate, nil
+	}
+
+	prefix := baseClean + string(os.PathSeparator)
+	if !strings.HasPrefix(candidate, prefix) {
+		return "", fmt.Errorf("invalid path")
+	}
+	return candidate, nil
 }
