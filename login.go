@@ -81,8 +81,8 @@ const indexPage = `
     <title>Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="assets/fonts/ionicons/css/ionicons.css">
-    <link rel="stylesheet" href="assets/css/bootstrap.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.css?v=1.0.0">
+    <link rel="stylesheet" href="assets/css/style.css?v=1.0.1">
 </head>
 <body>
         <section class="cd-section index7 visible">
@@ -118,6 +118,7 @@ const indexPage = `
 `
 
 func indexPageHandler(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 	fmt.Fprint(response, indexPage)
 }
 

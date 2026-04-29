@@ -59,6 +59,7 @@ func main() {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	printLog(r)
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 	if !loginCheck(w, r) {
 		return
 	}
